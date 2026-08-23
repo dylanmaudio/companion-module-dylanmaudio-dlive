@@ -10,8 +10,9 @@ const FOH = join(here, '..', '..', 'fixtures', 'showfiles', 'FoH-template-fw2.03
 describe('show file parser', () => {
 	it('reads scene names, quick names and base channel from a firmware template show', () => {
 		const r = parseShowTar(readFileSync(FOH), 'FoH')
-		expect(r.sceneNames.get(1)).toBe('Scene 1')
-		expect(r.sceneNames.get(2)).toBe('Scene 2')
+		// the StageBox side carries the operator's name; the Surface side only the default "Scene N"
+		expect(r.sceneNames.get(1)).toBe('Reset all settings')
+		expect(r.sceneNames.get(2)).toBe('C1500 Strip Assign')
 		expect(r.sceneNames.get(8)).toBe('Scene 500')
 		expect(r.sceneNames.has(65535)).toBe(false)
 		expect(r.sceneNames.size).toBe(8)

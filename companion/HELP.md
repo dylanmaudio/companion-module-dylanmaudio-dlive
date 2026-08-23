@@ -31,7 +31,7 @@ a DAW bridge, another module) may already hold the socket.
 | Inputs in use / extended types | Bounds the variable grid, presets and the sync |
 | Scene Go / Next / Previous | The CC number + value you assigned on the console. 0/0 = not assigned |
 | Console Actions map | `cc,value,Name` per line — turns raw CC sends into a named dropdown |
-| Show file | Path to a dLive show (`.tar.gz` / Show folder) on the Companion computer — the only source of **scene names** |
+| Show file | Path to a dLive show (`.tar.gz` from the console's USB export, or an unpacked Show folder) on the Companion computer — the only source of **scene names**. Verified against real console exports from firmware 1.9x–2.x |
 | Scene names (manual) | `scene,Name` per line; overrides the show file |
 | Show send levels in dB | Off by default: the send-level ↔ dB mapping is not yet calibrated |
 | Preamp gain range | Sources disagree; pick what matches your screen |

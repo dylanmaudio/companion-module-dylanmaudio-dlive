@@ -5,9 +5,14 @@
  * template shows, and what the console writes to USB). Most of it is
  * CRLF text; what we want:
  *
- *   Show/Scenes/SurfaceSceneNNN.tar.gz   → SurfaceSceneNNN.dat, bytes: 01 01 <name>\0 …
+ *   Show/Scenes/StageBoxSceneNNN.tar.gz  → StageBoxSceneNNN.dat, bytes: 01 01 <name>\0 …
  *                                          NNN is the scene number (65535 = the
- *                                          unsaved working state, skipped)
+ *                                          unsaved working state, skipped). The
+ *                                          MixRack-side file carries the name the
+ *                                          operator typed; the Surface-side file
+ *                                          (SurfaceSceneNNN) only holds the default
+ *                                          "Scene N" and is the fallback. An empty
+ *                                          name = an unused slot.
  *   Show/QuickName/ChannelQuickName.dat  → "1\r\nKick\r\nSnare\r\n…" (quick-name list,
  *                                          not per-channel — exposed as a hint only)
  *   Show/MIDI/MIDISettings.dat           → "3\r\n11\r\n…" second line = base MIDI
@@ -90,8 +95,33 @@ function cstr(b: Uint8Array): string {
 	return Buffer.from(b.subarray(0, end)).toString('latin1')
 }
 
-const SCENE_RE = /(?:^|\/)SurfaceScene(\d+)\.tar\.gz$/
-const SCENE_DAT_RE = /(?:^|\/)SurfaceScene(\d+)\.dat$/
+const SCENE_RE = /(?:^|\/)(StageBox|Surface)Scene(\d+)\.tar\.gz$/
+const SCENE_DAT_RE = /(?:^|\/)(?:StageBox|Surface)Scene(\d+)\.dat$/
+
+/** Collect names from both sides; StageBox wins over Surface for the same scene. */
+class SceneNames {
+	private readonly stagebox = new Map<number, string>()
+	private readonly surface = new Map<number, string>()
+	public unnamed = 0
+	add(side: string, scene: number, name: string | undefined): void {
+		if (!name) {
+			this.unnamed++
+			return
+		}
+		;(side === 'StageBox' ? this.stagebox : this.surface).set(scene, name)
+	}
+	merged(): Map<number, string> {
+		const out = new Map(this.surface)
+		for (const [k, v] of this.stagebox) out.set(k, v)
+		return new Map([...out.entries()].sort((a, b) => a[0] - b[0]))
+	}
+}
+
+function sceneNameFromArchive(buf: Buffer): string | undefined {
+	const inner = readTar(buf)
+	const dat = inner.find((x) => SCENE_DAT_RE.test(x.name)) ?? inner[0]
+	return dat ? sceneNameFromDat(dat.data) : undefined
+}
 
 /** Scene name from a SurfaceSceneNNN.dat: 2-byte header, then a NUL-terminated name. */
 export function sceneNameFromDat(dat: Buffer): string | undefined {
@@ -110,18 +140,15 @@ export function parseShowTar(buf: Buffer, source = 'show'): ShowFileResult {
 		return res
 	}
 	let sawShow = false
+	const names = new SceneNames()
 	for (const e of entries) {
 		if (e.name.includes('Show/')) sawShow = true
 		const m = SCENE_RE.exec(e.name)
 		if (m) {
-			const scene = Number(m[1])
+			const scene = Number(m[2])
 			if (scene < 1 || scene > 500) continue
 			try {
-				const inner = readTar(e.data)
-				const dat = inner.find((x) => SCENE_DAT_RE.test(x.name)) ?? inner[0]
-				const name = dat ? sceneNameFromDat(dat.data) : undefined
-				if (name) res.sceneNames.set(scene, name)
-				else res.warnings.push(`Scene ${scene}: no name found in ${e.name}`)
+				names.add(m[1], scene, sceneNameFromArchive(e.data))
 			} catch (err) {
 				res.warnings.push(`Scene ${scene}: ${(err as Error).message}`)
 			}
@@ -143,6 +170,7 @@ export function parseShowTar(buf: Buffer, source = 'show'): ShowFileResult {
 			else res.warnings.push('MIDISettings.dat: could not read the base MIDI channel')
 		}
 	}
+	res.sceneNames = names.merged()
 	if (!sawShow) res.warnings.push('Archive has no Show/ directory — is this a dLive show file?')
 	if (res.sceneNames.size === 0) res.warnings.push('No scene names found')
 	return res
@@ -167,20 +195,19 @@ function parseShowDirectory(dir: string): ShowFileResult {
 	}
 	const scenes = join(showDir, 'Scenes')
 	if (existsSync(scenes)) {
+		const names = new SceneNames()
 		for (const f of readdirSync(scenes)) {
 			const m = SCENE_RE.exec(f)
 			if (!m) continue
-			const scene = Number(m[1])
+			const scene = Number(m[2])
 			if (scene < 1 || scene > 500) continue
 			try {
-				const inner = readTar(readFileSync(join(scenes, f)))
-				const dat = inner.find((x) => SCENE_DAT_RE.test(x.name)) ?? inner[0]
-				const name = dat ? sceneNameFromDat(dat.data) : undefined
-				if (name) res.sceneNames.set(scene, name)
+				names.add(m[1], scene, sceneNameFromArchive(readFileSync(join(scenes, f))))
 			} catch (err) {
 				res.warnings.push(`Scene ${scene}: ${(err as Error).message}`)
 			}
 		}
+		res.sceneNames = names.merged()
 	} else {
 		res.warnings.push(`No Scenes folder under ${showDir}`)
 	}
