@@ -13,7 +13,7 @@ describe('show file parser', () => {
 		// the StageBox side carries the operator's name; the Surface side only the default "Scene N"
 		expect(r.sceneNames.get(1)).toBe('Reset all settings')
 		expect(r.sceneNames.get(2)).toBe('C1500 Strip Assign')
-		expect(r.sceneNames.get(8)).toBe('Scene 500')
+		expect(r.sceneNames.get(8)).toBe('Reset MIDI')
 		expect(r.sceneNames.has(65535)).toBe(false)
 		expect(r.sceneNames.size).toBe(8)
 		expect(r.quickNames.slice(0, 3)).toEqual(['Kick', 'Snare', 'HH'])
