@@ -1,0 +1,28 @@
+{
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+	"type": "connection",
+	"id": "dylanmaudio-dlive",
+	"name": "dylanmaudio-dlive",
+	"shortname": "dLive",
+	"description": "Allen & Heath dLive — control with full state feedback, variables and presets. Mute, fader, scene and name feedback straight off the desk; timed fades on every level; show-file import for scene names.",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repository": "git+https://github.com/dylanmaudio/companion-module-dylanmaudio-dlive.git",
+	"bugs": "https://github.com/dylanmaudio/companion-module-dylanmaudio-dlive/issues",
+	"maintainers": [
+		{
+			"name": "Dylan Mitrovich",
+			"email": "dylan@dylanmaudio.com"
+		}
+	],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "2.1.3",
+		"entrypoint": "../dist/main.js"
+	},
+	"legacyIds": [],
+	"manufacturer": "Allen & Heath",
+	"products": ["dLive"],
+	"keywords": ["Audio", "Sound", "Mixer", "dLive", "Allen & Heath", "MIDI"]
+}

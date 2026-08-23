@@ -1,0 +1,1237 @@
+{
+ "schema": "dlive-fixtures/1",
+ "source": "docs/protocol.md",
+ "note": "Authority for both codecs. Tiers: hardware > two-impl > single > inferred (see docs/protocol.md).",
+ "cases": [
+  {
+   "id": "mute.input1.on.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute",
+    "type": "input",
+    "index": 1,
+    "on": true
+   },
+   "hex": "90 00 7f"
+  },
+  {
+   "id": "mute.input1.off.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute",
+    "type": "input",
+    "index": 1,
+    "on": false
+   },
+   "hex": "90 00 3f"
+  },
+  {
+   "id": "mute.dca3.on.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute",
+    "type": "dca",
+    "index": 3,
+    "on": true
+   },
+   "hex": "94 38 7f"
+  },
+  {
+   "id": "mute.mutegroup1.on.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute",
+    "type": "mute_group",
+    "index": 1,
+    "on": true
+   },
+   "hex": "94 4e 7f"
+  },
+  {
+   "id": "mute.stereoaux2.off.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute",
+    "type": "stereo_aux",
+    "index": 2,
+    "on": false
+   },
+   "hex": "92 41 3f"
+  },
+  {
+   "id": "mute.input128.on.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute",
+    "type": "input",
+    "index": 128,
+    "on": true
+   },
+   "hex": "90 7f 7f"
+  },
+  {
+   "id": "fader.input1.unity.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "fader",
+    "type": "input",
+    "index": 1,
+    "level": 107
+   },
+   "hex": "b0 63 00 b0 62 17 b0 06 6b"
+  },
+  {
+   "id": "fader.input12.minusinf.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "fader",
+    "type": "input",
+    "index": 12,
+    "level": 0
+   },
+   "hex": "b0 63 0b b0 62 17 b0 06 00"
+  },
+  {
+   "id": "fader.main1.max.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "fader",
+    "type": "main",
+    "index": 1,
+    "level": 127
+   },
+   "hex": "b4 63 30 b4 62 17 b4 06 7f"
+  },
+  {
+   "id": "fader.monoaux62.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "fader",
+    "type": "mono_aux",
+    "index": 62,
+    "level": 64
+   },
+   "hex": "b2 63 3d b2 62 17 b2 06 40"
+  },
+  {
+   "id": "fader.ufxreturn8.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "fader",
+    "type": "ufx_return",
+    "index": 8,
+    "level": 100
+   },
+   "hex": "b4 63 65 b4 62 17 b4 06 64"
+  },
+  {
+   "id": "scene.1.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "scene",
+    "scene": 1
+   },
+   "hex": "b0 00 00 b0 20 00 c0 00"
+  },
+  {
+   "id": "scene.128.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "scene",
+    "scene": 128
+   },
+   "hex": "b0 00 00 b0 20 00 c0 7f"
+  },
+  {
+   "id": "scene.129.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "scene",
+    "scene": 129
+   },
+   "hex": "b0 00 01 b0 20 00 c0 00",
+   "note": "bank in CC0 (MSB); CC32 = 0 \u2014 byte-identical to the proven Reaper stream"
+  },
+  {
+   "id": "scene.500.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "scene",
+    "scene": 500
+   },
+   "hex": "b0 00 03 b0 20 00 c0 73"
+  },
+  {
+   "id": "action.cc20.v1.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "action",
+    "cc": 20,
+    "value": 1
+   },
+   "hex": "b0 14 01"
+  },
+  {
+   "id": "surface_cc.go.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "surface",
+   "base_channel": 1,
+   "intent": {
+    "op": "surface_cc",
+    "cc": 64,
+    "value": 127
+   },
+   "hex": "b0 40 7f"
+  },
+  {
+   "id": "get_name.input1.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_name",
+    "type": "input",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 01 00 f7"
+  },
+  {
+   "id": "get_name.dca5.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_name",
+    "type": "dca",
+    "index": 5
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 04 01 3a f7"
+  },
+  {
+   "id": "set_name.input1.kick.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "set_name",
+    "type": "input",
+    "index": 1,
+    "name": "Kick"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 03 00 4b 69 63 6b f7"
+  },
+  {
+   "id": "set_name.input2.nonascii.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "set_name",
+    "type": "input",
+    "index": 2,
+    "name": "Gtr\u00e9"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 03 01 47 74 72 3f f7",
+   "note": "non-ASCII becomes '?' to stay 7-bit"
+  },
+  {
+   "id": "get_colour.input1.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_colour",
+    "type": "input",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 04 00 f7"
+  },
+  {
+   "id": "set_colour.input1.red.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "set_colour",
+    "type": "input",
+    "index": 1,
+    "colour": "red"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 06 00 01 f7"
+  },
+  {
+   "id": "set_colour.stereogroup3.white.b1",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "set_colour",
+    "type": "stereo_group",
+    "index": 3,
+    "colour": "white"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 01 06 42 07 f7"
+  },
+  {
+   "id": "mute.input1.on.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "mute",
+    "type": "input",
+    "index": 1,
+    "on": true
+   },
+   "hex": "9b 00 7f"
+  },
+  {
+   "id": "mute.input1.off.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "mute",
+    "type": "input",
+    "index": 1,
+    "on": false
+   },
+   "hex": "9b 00 3f"
+  },
+  {
+   "id": "mute.dca3.on.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "mute",
+    "type": "dca",
+    "index": 3,
+    "on": true
+   },
+   "hex": "9f 38 7f"
+  },
+  {
+   "id": "mute.mutegroup1.on.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "mute",
+    "type": "mute_group",
+    "index": 1,
+    "on": true
+   },
+   "hex": "9f 4e 7f"
+  },
+  {
+   "id": "mute.stereoaux2.off.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "mute",
+    "type": "stereo_aux",
+    "index": 2,
+    "on": false
+   },
+   "hex": "9d 41 3f"
+  },
+  {
+   "id": "mute.input128.on.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "mute",
+    "type": "input",
+    "index": 128,
+    "on": true
+   },
+   "hex": "9b 7f 7f"
+  },
+  {
+   "id": "fader.input1.unity.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "fader",
+    "type": "input",
+    "index": 1,
+    "level": 107
+   },
+   "hex": "bb 63 00 bb 62 17 bb 06 6b"
+  },
+  {
+   "id": "fader.input12.minusinf.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "fader",
+    "type": "input",
+    "index": 12,
+    "level": 0
+   },
+   "hex": "bb 63 0b bb 62 17 bb 06 00"
+  },
+  {
+   "id": "fader.main1.max.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "fader",
+    "type": "main",
+    "index": 1,
+    "level": 127
+   },
+   "hex": "bf 63 30 bf 62 17 bf 06 7f"
+  },
+  {
+   "id": "fader.monoaux62.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "fader",
+    "type": "mono_aux",
+    "index": 62,
+    "level": 64
+   },
+   "hex": "bd 63 3d bd 62 17 bd 06 40"
+  },
+  {
+   "id": "fader.ufxreturn8.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "fader",
+    "type": "ufx_return",
+    "index": 8,
+    "level": 100
+   },
+   "hex": "bf 63 65 bf 62 17 bf 06 64"
+  },
+  {
+   "id": "scene.1.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "scene",
+    "scene": 1
+   },
+   "hex": "bb 00 00 bb 20 00 cb 00"
+  },
+  {
+   "id": "scene.128.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "scene",
+    "scene": 128
+   },
+   "hex": "bb 00 00 bb 20 00 cb 7f"
+  },
+  {
+   "id": "scene.129.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "scene",
+    "scene": 129
+   },
+   "hex": "bb 00 01 bb 20 00 cb 00",
+   "note": "bank in CC0 (MSB); CC32 = 0 \u2014 byte-identical to the proven Reaper stream"
+  },
+  {
+   "id": "scene.500.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "scene",
+    "scene": 500
+   },
+   "hex": "bb 00 03 bb 20 00 cb 73"
+  },
+  {
+   "id": "action.cc20.v1.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "action",
+    "cc": 20,
+    "value": 1
+   },
+   "hex": "bb 14 01"
+  },
+  {
+   "id": "surface_cc.go.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "surface",
+   "base_channel": 12,
+   "intent": {
+    "op": "surface_cc",
+    "cc": 64,
+    "value": 127
+   },
+   "hex": "bb 40 7f"
+  },
+  {
+   "id": "get_name.input1.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "get_name",
+    "type": "input",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0b 01 00 f7"
+  },
+  {
+   "id": "get_name.dca5.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "get_name",
+    "type": "dca",
+    "index": 5
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0f 01 3a f7"
+  },
+  {
+   "id": "set_name.input1.kick.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "set_name",
+    "type": "input",
+    "index": 1,
+    "name": "Kick"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0b 03 00 4b 69 63 6b f7"
+  },
+  {
+   "id": "set_name.input2.nonascii.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "set_name",
+    "type": "input",
+    "index": 2,
+    "name": "Gtr\u00e9"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0b 03 01 47 74 72 3f f7",
+   "note": "non-ASCII becomes '?' to stay 7-bit"
+  },
+  {
+   "id": "get_colour.input1.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "get_colour",
+    "type": "input",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0b 04 00 f7"
+  },
+  {
+   "id": "set_colour.input1.red.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "set_colour",
+    "type": "input",
+    "index": 1,
+    "colour": "red"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0b 06 00 01 f7"
+  },
+  {
+   "id": "set_colour.stereogroup3.white.b12",
+   "tier": "hardware",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "intent": {
+    "op": "set_colour",
+    "type": "stereo_group",
+    "index": 3,
+    "colour": "white"
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 0c 06 42 07 f7"
+  },
+  {
+   "id": "main_assign.input1.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "main_assign",
+    "type": "input",
+    "index": 1,
+    "on": true
+   },
+   "hex": "b0 63 00 b0 62 18 b0 06 7f"
+  },
+  {
+   "id": "main_assign.input1.off",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "main_assign",
+    "type": "input",
+    "index": 1,
+    "on": false
+   },
+   "hex": "b0 63 00 b0 62 18 b0 06 3f"
+  },
+  {
+   "id": "dca_assign.input1.dca1.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "dca_assign",
+    "type": "input",
+    "index": 1,
+    "dca": 1,
+    "on": true
+   },
+   "hex": "b0 63 00 b0 62 40 b0 06 40"
+  },
+  {
+   "id": "dca_assign.input1.dca24.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "dca_assign",
+    "type": "input",
+    "index": 1,
+    "dca": 24,
+    "on": true
+   },
+   "hex": "b0 63 00 b0 62 40 b0 06 57"
+  },
+  {
+   "id": "dca_assign.input1.dca1.off",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "dca_assign",
+    "type": "input",
+    "index": 1,
+    "dca": 1,
+    "on": false
+   },
+   "hex": "b0 63 00 b0 62 40 b0 06 00"
+  },
+  {
+   "id": "mutegroup_assign.input1.mg1.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute_group_assign",
+    "type": "input",
+    "index": 1,
+    "group": 1,
+    "on": true
+   },
+   "hex": "b0 63 00 b0 62 40 b0 06 58"
+  },
+  {
+   "id": "mutegroup_assign.input1.mg8.off",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mute_group_assign",
+    "type": "input",
+    "index": 1,
+    "group": 8,
+    "on": false
+   },
+   "hex": "b0 63 00 b0 62 40 b0 06 1f"
+  },
+  {
+   "id": "peq.input1.band1.type.bell",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "peq",
+    "type": "input",
+    "index": 1,
+    "band": 1,
+    "param": "type",
+    "value": 0
+   },
+   "hex": "b0 63 00 b0 62 1a b0 06 00"
+  },
+  {
+   "id": "peq.input1.band1.freq",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "peq",
+    "type": "input",
+    "index": 1,
+    "band": 1,
+    "param": "freq",
+    "value": 72
+   },
+   "hex": "b0 63 00 b0 62 1b b0 06 48"
+  },
+  {
+   "id": "peq.input1.band2.width",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "peq",
+    "type": "input",
+    "index": 1,
+    "band": 2,
+    "param": "width",
+    "value": 5
+   },
+   "hex": "b0 63 00 b0 62 20 b0 06 05"
+  },
+  {
+   "id": "peq.input1.band4.gain",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "peq",
+    "type": "input",
+    "index": 1,
+    "band": 4,
+    "param": "gain",
+    "value": 64
+   },
+   "hex": "b0 63 00 b0 62 29 b0 06 40"
+  },
+  {
+   "id": "hpf_freq.input1",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "hpf_freq",
+    "index": 1,
+    "value": 40
+   },
+   "hex": "b0 63 00 b0 62 30 b0 06 28"
+  },
+  {
+   "id": "hpf_on.input1.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "hpf_on",
+    "index": 1,
+    "on": true
+   },
+   "hex": "b0 63 00 b0 62 31 b0 06 40"
+  },
+  {
+   "id": "hpf_on.input1.off",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "hpf_on",
+    "index": 1,
+    "on": false
+   },
+   "hex": "b0 63 00 b0 62 31 b0 06 00"
+  },
+  {
+   "id": "cue_list.0",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "surface",
+   "base_channel": 1,
+   "intent": {
+    "op": "cue_list",
+    "id": 0
+   },
+   "hex": "b0 00 00 c0 00"
+  },
+  {
+   "id": "cue_list.129",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "surface",
+   "base_channel": 1,
+   "intent": {
+    "op": "cue_list",
+    "id": 129
+   },
+   "hex": "b0 00 01 c0 01"
+  },
+  {
+   "id": "cue_list.1999",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "surface",
+   "base_channel": 1,
+   "intent": {
+    "op": "cue_list",
+    "id": 1999
+   },
+   "hex": "b0 00 0f c0 4f"
+  },
+  {
+   "id": "send_level.input1.monoaux1",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "send_level",
+    "type": "input",
+    "index": 1,
+    "dest_type": "mono_aux",
+    "dest_index": 1,
+    "level": 107
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 0d 00 02 00 6b f7",
+   "note": "LV\u2194dB uncalibrated for sends"
+  },
+  {
+   "id": "send_level.input3.stereofx2",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "send_level",
+    "type": "input",
+    "index": 3,
+    "dest_type": "stereo_fx_send",
+    "dest_index": 2,
+    "level": 0
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 0d 02 04 11 00 f7"
+  },
+  {
+   "id": "send_level.monogroup2.stereomatrix1",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "send_level",
+    "type": "mono_group",
+    "index": 2,
+    "dest_type": "stereo_matrix",
+    "dest_index": 1,
+    "level": 64
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 01 0d 01 03 40 40 f7"
+  },
+  {
+   "id": "send_level.fxreturn1.ufxsend1",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "send_level",
+    "type": "fx_return",
+    "index": 1,
+    "dest_type": "ufx_send",
+    "dest_index": 1,
+    "level": 90
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 04 0d 20 04 56 5a f7"
+  },
+  {
+   "id": "mix_assign.input1.monogroup1.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mix_assign",
+    "index": 1,
+    "dest_type": "mono_group",
+    "dest_index": 1,
+    "on": true
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 0e 00 01 00 40 f7"
+  },
+  {
+   "id": "mix_assign.input5.stereoaux3.off",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "mix_assign",
+    "index": 5,
+    "dest_type": "stereo_aux",
+    "dest_index": 3,
+    "on": false
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 0e 04 02 42 00 f7"
+  },
+  {
+   "id": "preamp_gain.mixrack1",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "preamp_gain",
+    "bank": "mixrack",
+    "socket": 1,
+    "value": 64
+   },
+   "hex": "e0 00 40",
+   "note": "gain dB range disputed \u2014 raw value here"
+  },
+  {
+   "id": "preamp_gain.dx12.socket5",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "preamp_gain",
+    "bank": "dx12",
+    "socket": 5,
+    "value": 0
+   },
+   "hex": "e0 44 00"
+  },
+  {
+   "id": "preamp_gain.dx34.socket32",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "preamp_gain",
+    "bank": "dx34",
+    "socket": 32,
+    "value": 127
+   },
+   "hex": "e0 7f 7f"
+  },
+  {
+   "id": "preamp_pad.mixrack1.on",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "preamp_pad",
+    "bank": "mixrack",
+    "socket": 1,
+    "on": true
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 09 00 40 f7"
+  },
+  {
+   "id": "preamp_48v.mixrack64.off",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "preamp_48v",
+    "bank": "mixrack",
+    "socket": 64,
+    "on": false
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 0c 3f 00 f7"
+  },
+  {
+   "id": "ufx_key.a",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "ufx_key",
+    "key": 9
+   },
+   "hex": "b0 0c 09"
+  },
+  {
+   "id": "ufx_scale.minor",
+   "tier": "two-impl",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "ufx_scale",
+    "scale": 1
+   },
+   "hex": "b0 0d 01"
+  },
+  {
+   "id": "get_mute.input1",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_mute",
+    "type": "input",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 09 00 f7"
+  },
+  {
+   "id": "get_mute.dca2",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_mute",
+    "type": "dca",
+    "index": 2
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 04 05 09 37 f7"
+  },
+  {
+   "id": "get_fader.input1",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_fader",
+    "type": "input",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0b 17 00 f7"
+  },
+  {
+   "id": "get_fader.stereoaux1",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_fader",
+    "type": "stereo_aux",
+    "index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 02 05 0b 17 40 f7"
+  },
+  {
+   "id": "get_param.main_assign.input1",
+   "tier": "inferred",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_param",
+    "type": "input",
+    "index": 1,
+    "param": 24
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0b 18 00 f7"
+  },
+  {
+   "id": "get_param.hpf_on.input1",
+   "tier": "inferred",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_param",
+    "type": "input",
+    "index": 1,
+    "param": 49
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0b 31 00 f7"
+  },
+  {
+   "id": "get_send_level.input1.monoaux1",
+   "tier": "single",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_send_level",
+    "type": "input",
+    "index": 1,
+    "dest_type": "mono_aux",
+    "dest_index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0f 0d 00 02 00 f7"
+  },
+  {
+   "id": "get_mix_assign.input1.monogroup1",
+   "tier": "inferred",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_mix_assign",
+    "index": 1,
+    "dest_type": "mono_group",
+    "dest_index": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0f 0e 00 01 00 f7"
+  },
+  {
+   "id": "get_preamp_gain.mixrack1",
+   "tier": "inferred",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_preamp_gain",
+    "bank": "mixrack",
+    "socket": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0e 00 f7"
+  },
+  {
+   "id": "get_preamp_pad.mixrack1",
+   "tier": "inferred",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_preamp_pad",
+    "bank": "mixrack",
+    "socket": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0f 09 00 f7"
+  },
+  {
+   "id": "get_preamp_48v.dx12.socket1",
+   "tier": "inferred",
+   "dir": "tx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "intent": {
+    "op": "get_preamp_48v",
+    "bank": "dx12",
+    "socket": 1
+   },
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0f 0c 40 f7"
+  }
+ ]
+}

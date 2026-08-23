@@ -1,0 +1,853 @@
+{
+ "schema": "dlive-fixtures/1",
+ "source": "docs/protocol.md",
+ "note": "Authority for both codecs. Tiers: hardware > two-impl > single > inferred (see docs/protocol.md).",
+ "cases": [
+  {
+   "id": "rx.mute.input1.on.echo.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.input1.off.echo.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 3f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": false
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.input1.on.spec.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 40",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "PDF convention 0x40/0x00 \u2014 threshold decode"
+  },
+  {
+   "id": "rx.mute.input1.off.spec.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 00",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": false
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.dca3.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "94 38 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "dca",
+     "index": 3,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.ping.input1.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 00",
+   "events": [
+    {
+     "kind": "fader_ping",
+     "type": "input",
+     "index": 1
+    }
+   ],
+   "note": "lone NRPN MSB \u2014 fader moved, no level"
+  },
+  {
+   "id": "rx.ping.stereogroup2.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b1 63 41",
+   "events": [
+    {
+     "kind": "fader_ping",
+     "type": "stereo_group",
+     "index": 2
+    }
+   ]
+  },
+  {
+   "id": "rx.fader.input1.unity.b1",
+   "tier": "single",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 00 b0 62 17 b0 06 6b",
+   "events": [
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 1,
+     "level": 107
+    }
+   ],
+   "note": "Get Fader reply shape (assumed = set shape). No ping is emitted when the triple completes."
+  },
+  {
+   "id": "rx.scene.129.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 00 01 c0 01",
+   "events": [
+    {
+     "kind": "scene",
+     "scene": 130
+    }
+   ],
+   "note": "bank 1, pc 1 \u2192 scene 130"
+  },
+  {
+   "id": "rx.scene.1.nobank.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "c0 00",
+   "events": [
+    {
+     "kind": "scene",
+     "scene": 1
+    }
+   ],
+   "note": "lone PC with no bank seen this session \u2192 bank 0"
+  },
+  {
+   "id": "rx.name.input1.kick.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 02 00 4b 69 63 6b f7",
+   "events": [
+    {
+     "kind": "name",
+     "type": "input",
+     "index": 1,
+     "name": "Kick"
+    }
+   ]
+  },
+  {
+   "id": "rx.colour.input1.red.b1",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 00 01 f7",
+   "events": [
+    {
+     "kind": "colour",
+     "type": "input",
+     "index": 1,
+     "colour": "red"
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.input1.on.echo.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "9b 00 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.input1.off.echo.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "9b 00 3f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": false
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.input1.on.spec.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "9b 00 40",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "PDF convention 0x40/0x00 \u2014 threshold decode"
+  },
+  {
+   "id": "rx.mute.input1.off.spec.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "9b 00 00",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": false
+    }
+   ]
+  },
+  {
+   "id": "rx.mute.dca3.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "9f 38 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "dca",
+     "index": 3,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.ping.input1.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "bb 63 00",
+   "events": [
+    {
+     "kind": "fader_ping",
+     "type": "input",
+     "index": 1
+    }
+   ],
+   "note": "lone NRPN MSB \u2014 fader moved, no level"
+  },
+  {
+   "id": "rx.ping.stereogroup2.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "bc 63 41",
+   "events": [
+    {
+     "kind": "fader_ping",
+     "type": "stereo_group",
+     "index": 2
+    }
+   ]
+  },
+  {
+   "id": "rx.fader.input1.unity.b12",
+   "tier": "single",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "bb 63 00 bb 62 17 bb 06 6b",
+   "events": [
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 1,
+     "level": 107
+    }
+   ],
+   "note": "Get Fader reply shape (assumed = set shape). No ping is emitted when the triple completes."
+  },
+  {
+   "id": "rx.scene.129.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "bb 00 01 cb 01",
+   "events": [
+    {
+     "kind": "scene",
+     "scene": 130
+    }
+   ],
+   "note": "bank 1, pc 1 \u2192 scene 130"
+  },
+  {
+   "id": "rx.scene.1.nobank.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "cb 00",
+   "events": [
+    {
+     "kind": "scene",
+     "scene": 1
+    }
+   ],
+   "note": "lone PC with no bank seen this session \u2192 bank 0"
+  },
+  {
+   "id": "rx.name.input1.kick.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "f0 00 00 1a 50 10 01 00 0b 02 00 4b 69 63 6b f7",
+   "events": [
+    {
+     "kind": "name",
+     "type": "input",
+     "index": 1,
+     "name": "Kick"
+    }
+   ]
+  },
+  {
+   "id": "rx.colour.input1.red.b12",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "f0 00 00 1a 50 10 01 00 0b 05 00 01 f7",
+   "events": [
+    {
+     "kind": "colour",
+     "type": "input",
+     "index": 1,
+     "colour": "red"
+    }
+   ]
+  },
+  {
+   "id": "rx.running_status.mutes",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 7f 01 3f 02 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 2,
+     "on": false
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 3,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.realtime.mid_message",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 f8 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "F8 inside a message is dropped, message completes"
+  },
+  {
+   "id": "rx.realtime.mid_sysex",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 02 00 4b f8 69 63 6b f7",
+   "events": [
+    {
+     "kind": "name",
+     "type": "input",
+     "index": 1,
+     "name": "Kick"
+    }
+   ]
+  },
+  {
+   "id": "rx.split.sysex_across_chunks",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 02 00 53 6e 61 72 65 f7",
+   "events": [
+    {
+     "kind": "name",
+     "type": "input",
+     "index": 1,
+     "name": "Snare"
+    }
+   ],
+   "chunks": [
+    "f0 00 00 1a 50",
+    "10 01 00 00 02 00 53 6e",
+    "61 72 65 f7"
+   ]
+  },
+  {
+   "id": "rx.split.nrpn_across_chunks",
+   "tier": "single",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 05 b0 62 17 b0 06 50",
+   "events": [
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 6,
+     "level": 80
+    }
+   ],
+   "chunks": [
+    "b0 63",
+    "05 b0 62 17 b0",
+    "06 50"
+   ]
+  },
+  {
+   "id": "rx.split.status_then_data",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "chunks": [
+    "90",
+    "00",
+    "7f"
+   ]
+  },
+  {
+   "id": "rx.nrpn.latch_persists",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 07 b0 62 17 b0 06 10 b0 06 20 b0 06 30",
+   "events": [
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 8,
+     "level": 16
+    },
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 8,
+     "level": 32
+    },
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 8,
+     "level": 48
+    }
+   ],
+   "note": "address latched: repeated Data Entry keeps applying to input 8"
+  },
+  {
+   "id": "rx.nrpn.ping_then_ping",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 00 b0 63 01",
+   "events": [
+    {
+     "kind": "fader_ping",
+     "type": "input",
+     "index": 1
+    },
+    {
+     "kind": "fader_ping",
+     "type": "input",
+     "index": 2
+    }
+   ],
+   "note": "two pings: the first 63 is emitted as a ping when the next 63 arrives (or on flush)"
+  },
+  {
+   "id": "rx.nrpn.ping_then_mute",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 00 90 03 7f",
+   "events": [
+    {
+     "kind": "fader_ping",
+     "type": "input",
+     "index": 1
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 4,
+     "on": true
+    }
+   ],
+   "note": "a non-NRPN message after a lone 63 flushes the ping first"
+  },
+  {
+   "id": "rx.nrpn.param.main_assign",
+   "tier": "two-impl",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 00 b0 62 18 b0 06 7f",
+   "events": [
+    {
+     "kind": "param",
+     "type": "input",
+     "index": 1,
+     "param": 24,
+     "value": 127
+    }
+   ]
+  },
+  {
+   "id": "rx.sysex.unterminated_aborted_by_status",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 02 00 4b 90 01 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 2,
+     "on": true
+    }
+   ],
+   "note": "status byte aborts the SysEx; nothing emitted for it"
+  },
+  {
+   "id": "rx.sysex.foreign_ignored",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 7e 7f 06 01 f7 90 00 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "non-A&H SysEx is dropped silently"
+  },
+  {
+   "id": "rx.channel_mode.ignored",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 7b 00 b0 79 00 90 00 3f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": false
+    }
+   ],
+   "note": "CC 120\u2013127 never touch NRPN state"
+  },
+  {
+   "id": "rx.nrpn.triple_survives_ignored_between",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "b0 63 00 80 05 00 b0 7b 00 f0 7e 7f 06 01 f7 f8 b0 62 17 b0 06 6b",
+   "events": [
+    {
+     "kind": "fader",
+     "type": "input",
+     "index": 1,
+     "level": 107
+    }
+   ],
+   "note": "ignored messages (note off, CC 120-127, foreign SysEx, real-time) between 63 and 62 neither flush the ping nor break the triple \u2014 ONE fader event, no ping"
+  },
+  {
+   "id": "rx.send_level.reply",
+   "tier": "two-impl",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 0d 00 02 00 6b f7",
+   "events": [
+    {
+     "kind": "send_level",
+     "type": "input",
+     "index": 1,
+     "dest_type": "mono_aux",
+     "dest_index": 1,
+     "level": 107
+    }
+   ]
+  },
+  {
+   "id": "rx.mix_assign.reply",
+   "tier": "inferred",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 0e 00 01 00 40 f7",
+   "events": [
+    {
+     "kind": "mix_assign",
+     "index": 1,
+     "dest_type": "mono_group",
+     "dest_index": 1,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.preamp_gain.reply",
+   "tier": "inferred",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "e0 00 40",
+   "events": [
+    {
+     "kind": "preamp_gain",
+     "bank": "mixrack",
+     "socket": 1,
+     "value": 64
+    }
+   ]
+  },
+  {
+   "id": "rx.preamp_pad.reply",
+   "tier": "inferred",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 09 41 40 f7",
+   "events": [
+    {
+     "kind": "preamp_pad",
+     "bank": "dx12",
+     "socket": 2,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.preamp_48v.reply",
+   "tier": "inferred",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 0c 60 00 f7",
+   "events": [
+    {
+     "kind": "preamp_48v",
+     "bank": "dx34",
+     "socket": 1,
+     "on": false
+    }
+   ]
+  },
+  {
+   "id": "rx.unknown_channel.passthrough",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "99 00 7f 90 00 7f",
+   "events": [
+    {
+     "kind": "unknown",
+     "status": 153,
+     "data": [
+      0,
+      127
+     ]
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "MIDI channel 10 is outside N..N+4 for base 1 \u2192 reported as unknown, stream continues"
+  },
+  {
+   "id": "rx.note_off.ignored",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "80 00 00 90 00 7f",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ]
+  },
+  {
+   "id": "rx.burst.running_status_with_clock",
+   "tier": "hardware",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 24 40 25 00 26 40 27 00 f8 28 40 29 00 2a 40 2b 00",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 37,
+     "on": true
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 38,
+     "on": false
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 39,
+     "on": true
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 40,
+     "on": false
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 41,
+     "on": true
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 42,
+     "on": false
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 43,
+     "on": true
+    },
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 44,
+     "on": false
+    }
+   ],
+   "note": "the Virtual dLive's running_status_burst shape (8 notes, clock spliced after the 4th)"
+  }
+ ]
+}
