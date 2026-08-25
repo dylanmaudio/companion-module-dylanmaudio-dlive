@@ -16,6 +16,8 @@ import {
 } from './config.js'
 import type { ModuleContext } from './context.js'
 import { ConsoleLink, type LinkStatus } from './link.js'
+import { BridgeLink } from './bridge/bridgelink.js'
+import type { LinkApi } from './link-api.js'
 import { TcpTransport } from './transport/transport.js'
 import { buildActions, type ActionsSchema } from './actions.js'
 import { buildFeedbacks, type FeedbacksSchema } from './feedbacks.js'
@@ -54,7 +56,7 @@ const STATUS_MAP: Record<LinkStatus, InstanceStatus> = {
 
 export default class DliveInstance extends InstanceBase<ModuleSchema> implements ModuleContext {
 	config: ModuleConfig = normaliseConfig(null)
-	link!: ConsoleLink
+	link!: LinkApi
 	actionsMap: ActionMapEntry[] = []
 	private scope: VariableScope = { inputs: 128, extendedTypes: true }
 	private recording = false
@@ -69,7 +71,7 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 
 	async init(config: ModuleConfig): Promise<void> {
 		this.config = normaliseConfig(config)
-		this.link = new ConsoleLink(this.makeTransport(), this.linkOptions())
+		this.link = this.makeLink()
 		this.wireLink()
 		this.applyConfig(true)
 	}
@@ -83,23 +85,34 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 	async configUpdated(config: ModuleConfig): Promise<void> {
 		const prev = this.config
 		this.config = normaliseConfig(config)
-		const transportChanged =
+		const modeChanged = prev.transport !== this.config.transport
+		const directChanged =
 			prev.host !== this.config.host ||
 			prev.port !== this.config.port ||
 			prev.surfaceHost !== this.config.surfaceHost ||
-			prev.surfacePort !== this.config.surfacePort
-		if (prev.baseChannel !== this.config.baseChannel) this.link.setBaseChannel(this.config.baseChannel)
-		Object.assign(this.link.scheduler.opts, {
-			inFlight: this.config.inFlight,
-			pingCoalesceMs: this.config.pingCoalesceMs,
-			pollIntervalMs: this.config.pollIntervalMs,
-		})
-		this.link.opts.syncScope = this.config.syncScope
-		this.link.opts.stripCounts = stripCountsFor({
-			inputs: this.config.inputs,
-			extendedTypes: this.config.extendedTypes,
-		})
-		if (transportChanged || prev.baseChannel !== this.config.baseChannel) this.link.setTransport(this.makeTransport())
+			prev.surfacePort !== this.config.surfacePort ||
+			prev.baseChannel !== this.config.baseChannel
+		const bridgeChanged =
+			prev.bridgeHost !== this.config.bridgeHost ||
+			prev.bridgePort !== this.config.bridgePort ||
+			prev.bridgeToken !== this.config.bridgeToken
+		if (modeChanged || (this.config.transport === 'direct' ? directChanged : bridgeChanged)) {
+			this.link.stop()
+			this.link.removeAllListeners()
+			this.link = this.makeLink()
+			this.wireLink()
+		} else if (this.link instanceof ConsoleLink) {
+			Object.assign(this.link.scheduler.opts, {
+				inFlight: this.config.inFlight,
+				pingCoalesceMs: this.config.pingCoalesceMs,
+				pollIntervalMs: this.config.pollIntervalMs,
+			})
+			this.link.opts.syncScope = this.config.syncScope
+			this.link.opts.stripCounts = stripCountsFor({
+				inputs: this.config.inputs,
+				extendedTypes: this.config.extendedTypes,
+			})
+		}
 		this.applyConfig(false)
 	}
 
@@ -108,6 +121,19 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 	}
 
 	// ------------------------------------------------------------ wiring
+
+	private makeLink(): LinkApi {
+		if (this.config.transport === 'bridge') {
+			return new BridgeLink({
+				host: this.config.bridgeHost,
+				port: this.config.bridgePort,
+				token: this.config.bridgeToken || undefined,
+				laneName: this.label,
+				baseChannel: this.config.baseChannel,
+			})
+		}
+		return new ConsoleLink(this.makeTransport(), this.linkOptions())
+	}
 
 	private makeTransport(): TcpTransport {
 		return new TcpTransport({
@@ -150,8 +176,8 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 		this.setActionDefinitions(buildActions(this))
 		this.setFeedbackDefinitions(buildFeedbacks(this))
 		void this.reloadShowFile().then(() => this.publishDefinitions())
-		if (!this.config.host) {
-			this.updateStatus(InstanceStatus.BadConfig, 'Enter the MixRack IP address')
+		if (this.config.transport === 'direct' && !this.config.host) {
+			this.updateStatus(InstanceStatus.BadConfig, 'Enter the MixRack IP address (or switch to bridge mode)')
 			return
 		}
 		if (first || this.link.status === 'disconnected') this.link.start()
@@ -167,12 +193,13 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 	}
 
 	private meta(): MetaValues {
+		const d = this.link.diag()
 		return {
 			firmware: this.config.firmware,
 			baseChannel: this.config.baseChannel,
-			getsInFlight: this.link.scheduler.inFlight,
-			getsMissed: this.link.scheduler.stats.missed,
-			unsupported: this.link.scheduler.backedOffOps().join(', '),
+			getsInFlight: d.getsInFlight,
+			getsMissed: d.getsMissed,
+			unsupported: d.unsupported,
 		}
 	}
 

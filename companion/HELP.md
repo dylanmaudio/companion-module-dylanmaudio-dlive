@@ -21,9 +21,22 @@ a DAW bridge, another module) may already hold the socket.
 
 ## Connection settings
 
+**Connect via** chooses the transport:
+
+- **Direct console (TCP)** — the module opens its own sockets to the desk.
+- **MIDI Bridge app (Client API v1)** — the module attaches to the dLive
+  MIDI Bridge (v1.1+) as a named lane. The bridge owns the console
+  connection, base channel, state mirror, query-on-ping and timed fades;
+  Companion's traffic shows up attributed in the bridge's MIDI Monitor.
+  Console IP and base channel are then configured in the bridge, not here.
+  In bridge mode v1.1, live feedback covers mutes, faders, names, colours
+  and the current scene; the param family (assigns, HPF, preamp, sends)
+  updates optimistically from this module's own actions only.
+
 | Setting | Notes |
 |---|---|
-| MixRack IP / port | Usually 192.168.1.70 : 51325 |
+| MixRack IP / port | Direct mode. Usually 192.168.1.70 : 51325 |
+| MIDI Bridge address / port / token | Bridge mode. 127.0.0.1:8765 when Companion runs beside the bridge; the token is only needed once the bridge exposes its API on the LAN |
 | Surface IP / port | Optional. Cue-list recall and Scene Go / Next / Previous belong to the Surface (51328). Leave blank to send them down the MixRack socket |
 | Base MIDI channel | From Utility → Control → MIDI |
 | Console firmware | Not detectable over MIDI; shown in `$(dlive:firmware)` |

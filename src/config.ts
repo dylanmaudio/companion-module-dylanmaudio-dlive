@@ -3,6 +3,10 @@ import type { PreampGainRange } from './protocol/levels.js'
 import type { SyncScope } from './link.js'
 
 export type ModuleConfig = {
+	transport: 'direct' | 'bridge'
+	bridgeHost: string
+	bridgePort: number
+	bridgeToken: string
 	host: string
 	port: number
 	surfaceHost: string
@@ -30,6 +34,10 @@ export type ModuleConfig = {
 }
 
 export const DEFAULT_CONFIG: ModuleConfig = {
+	transport: 'direct',
+	bridgeHost: '127.0.0.1',
+	bridgePort: 8765,
+	bridgeToken: '',
 	host: '',
 	port: 51325,
 	surfaceHost: '',
@@ -58,6 +66,9 @@ export const DEFAULT_CONFIG: ModuleConfig = {
 
 export function normaliseConfig(raw: Partial<ModuleConfig> | null | undefined): ModuleConfig {
 	const c = { ...DEFAULT_CONFIG, ...(raw ?? {}) }
+	if (c.transport !== 'bridge') c.transport = 'direct'
+	if (!c.bridgeHost) c.bridgeHost = '127.0.0.1'
+	c.bridgePort = clampInt(c.bridgePort, 1, 65535, 8765)
 	c.port = clampInt(c.port, 1, 65535, 51325)
 	c.surfacePort = clampInt(c.surfacePort, 1, 65535, 51328)
 	c.baseChannel = clampInt(c.baseChannel, 1, 12, 12)
@@ -88,8 +99,40 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			value:
 				'Talks MIDI over TCP to the <b>MixRack</b> (port 51325). On the console set Utility → Control → MIDI to <b>On</b> (not Secure), enable Global MIDI Send and Receive, and note the base MIDI channel shown there — it must match below. Status goes green only once the desk actually answers.',
 		},
-		{ type: 'textinput', id: 'host', label: 'MixRack IP', width: 8, regex: Regex.IP, default: '' },
-		{ type: 'number', id: 'port', label: 'Port', width: 4, min: 1, max: 65535, default: 51325 },
+		{
+			type: 'dropdown',
+			id: 'transport',
+			label: 'Connect via',
+			tooltip:
+				'Direct: this module opens its own console sockets. MIDI Bridge: the module attaches to the dLive MIDI Bridge app (Client API), sharing its console connection, state mirror and MIDI Monitor.',
+			width: 12,
+			default: 'direct',
+			choices: [
+				{ id: 'direct', label: 'Direct console (TCP)' },
+				{ id: 'bridge', label: 'MIDI Bridge app (Client API v1, bridge 1.1+)' },
+			],
+		},
+		{ type: 'textinput', id: 'host', label: 'MixRack IP (direct)', width: 8, regex: Regex.IP, default: '' },
+		{ type: 'number', id: 'port', label: 'Port (direct)', width: 4, min: 1, max: 65535, default: 51325 },
+		{
+			type: 'textinput',
+			id: 'bridgeHost',
+			label: 'MIDI Bridge address (bridge mode)',
+			tooltip:
+				'127.0.0.1 when Companion runs on the same Mac as the bridge. The console IP and base channel then come from the bridge.',
+			width: 8,
+			default: '127.0.0.1',
+		},
+		{ type: 'number', id: 'bridgePort', label: 'Bridge port', width: 4, min: 1, max: 65535, default: 8765 },
+		{
+			type: 'textinput',
+			id: 'bridgeToken',
+			label: 'Bridge token (only for LAN access)',
+			tooltip:
+				'Leave empty on the same machine. When the bridge exposes its API on the LAN it shows a token — paste it here.',
+			width: 12,
+			default: '',
+		},
 		{
 			type: 'textinput',
 			id: 'surfaceHost',

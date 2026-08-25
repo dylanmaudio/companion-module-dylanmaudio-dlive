@@ -20,14 +20,9 @@ import { SubscriptionRegistry } from './state/subscriptions.js'
 import type { ConsoleTransport } from './transport/transport.js'
 import { FadeEngine } from './fades.js'
 
-export type LinkStatus = 'disconnected' | 'connecting' | 'probing' | 'ok' | 'failure'
+import type { LinkApi, LinkDiag, LinkEvents, LinkStatus } from './link-api.js'
 
-export interface LinkEvents {
-	changed: [paths: string[]]
-	status: [status: LinkStatus, message: string | undefined]
-	event: [ev: ConsoleEvent, role: SocketRole]
-	log: [level: 'debug' | 'info' | 'warn' | 'error', message: string]
-}
+export type { LinkEvents, LinkStatus } from './link-api.js'
 
 export type SyncScope = 'names' | 'names_state' | 'all' | 'none'
 
@@ -47,7 +42,7 @@ export interface LinkOptions {
 
 const PROBE_TARGET: ChannelRef = { type: 'input', index: 1 }
 
-export class ConsoleLink extends EventEmitter<LinkEvents> {
+export class ConsoleLink extends EventEmitter<LinkEvents> implements LinkApi {
 	readonly state = new ConsoleState()
 	readonly subscriptions = new SubscriptionRegistry()
 	readonly scheduler: QueryScheduler
@@ -119,6 +114,14 @@ export class ConsoleLink extends EventEmitter<LinkEvents> {
 
 	get isOk(): boolean {
 		return this._status === 'ok'
+	}
+
+	diag(): LinkDiag {
+		return {
+			getsInFlight: this.scheduler.inFlight,
+			getsMissed: this.scheduler.stats.missed,
+			unsupported: this.scheduler.backedOffOps().join(', '),
+		}
 	}
 
 	// ------------------------------------------------------------ lifecycle

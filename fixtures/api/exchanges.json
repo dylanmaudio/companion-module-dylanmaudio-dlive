@@ -1,0 +1,100 @@
+{
+  "schema": "dlive-api-fixtures/1",
+  "source": "docs/bridge-client-api-v1.md (accepted 2026-08-25)",
+  "note": "Authority for the Client API wire shapes, BOTH sides: the monorepo server replays requests and asserts responses; the Companion module mocks the server from the same file (vendored by tools/sync_fixtures.sh, monorepo -> module repo — the REVERSE of the protocol fixtures). Matching rules: response bodies are SUBSET-matched (extra server keys are allowed — additive changes don't bump v1, spec §11); '<str>'/'<int>' match any value of that type; '<lane>' is substituted with the lane_id registered by the most recent hello case; 'sends' asserts the exact console-bound hex the request must produce. Never edit a case to make a test green — change the spec first, then both sides.",
+  "cases": [
+    {
+      "id": "info.ok",
+      "request": {"method": "GET", "path": "/api/v1/info"},
+      "response": {"status": 200, "body": {
+        "v": 1, "session": "main", "api": 1,
+        "capabilities": {"raw": true, "fade": true, "query": true,
+                          "fader_db": true, "send_level": false},
+        "return_port_policy": "broadcasts", "seq": "<int>"}}
+    },
+    {
+      "id": "hello.ok",
+      "request": {"method": "POST", "path": "/api/v1/hello",
+                  "body": {"v": 1, "session": "main",
+                           "name": "Fixture Lane", "kind": "companion"}},
+      "response": {"status": 200, "body": {
+        "v": 1, "session": "main", "lane_id": "<str>",
+        "capabilities": {"raw": true}, "seq": "<int>"}}
+    },
+    {
+      "id": "hello.bad_kind",
+      "request": {"method": "POST", "path": "/api/v1/hello",
+                  "body": {"name": "x", "kind": "toaster"}},
+      "response": {"status": 400, "body": {
+        "ok": false, "error": {"code": "bad_kind"}}}
+    },
+    {
+      "id": "cmd.mute.input1.on",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"v": 1, "session": "main", "lane_id": "<lane>",
+                           "cid": "fx1",
+                           "intent": {"op": "mute", "type": "input",
+                                       "index": 1, "on": true}}},
+      "response": {"status": 200, "body": {"cid": "fx1", "ok": true}},
+      "sends": ["9b 00 7f"]
+    },
+    {
+      "id": "cmd.fader.db_unity",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "<lane>", "cid": "fx2",
+                           "intent": {"op": "fader", "type": "input",
+                                       "index": 1, "db": 0.0}}},
+      "response": {"status": 200, "body": {"cid": "fx2", "ok": true}},
+      "sends": ["bb 63 00 bb 62 17 bb 06 6b"]
+    },
+    {
+      "id": "cmd.raw",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "<lane>", "cid": "fx3",
+                           "intent": {"op": "raw", "hex": "9b 05 7f"}}},
+      "response": {"status": 200, "body": {"cid": "fx3", "ok": true}},
+      "sends": ["9b 05 7f"]
+    },
+    {
+      "id": "cmd.unknown_lane",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "ln_000000", "cid": "fx4",
+                           "intent": {"op": "mute", "type": "input",
+                                       "index": 1, "on": true}}},
+      "response": {"status": 401, "body": {
+        "ok": false, "error": {"code": "unknown_lane"}}}
+    },
+    {
+      "id": "cmd.send_level.capability_off",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "<lane>", "cid": "fx5",
+                           "intent": {"op": "send_level", "type": "input",
+                                       "index": 1, "dest_type": "mono_aux",
+                                       "dest_index": 1, "level": 100}}},
+      "response": {"status": 409, "body": {
+        "ok": false, "error": {"code": "capability_off"}}}
+    },
+    {
+      "id": "cmd.unsupported_op",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "<lane>", "cid": "fx6",
+                           "intent": {"op": "peq", "type": "input",
+                                       "index": 1}}},
+      "response": {"status": 400, "body": {
+        "ok": false, "error": {"code": "unsupported_op"}}}
+    },
+    {
+      "id": "stream.resync",
+      "request": {"method": "GET", "path": "/api/v1/stream?cursor=-1"},
+      "response": {"status": 409, "body": {
+        "ok": false, "error": {"code": "resync"}}},
+      "note": "cursor=-1 is always older than the ring's oldest entry"
+    },
+    {
+      "id": "lane.delete.unknown",
+      "request": {"method": "DELETE", "path": "/api/v1/lane/ln_000000"},
+      "response": {"status": 404, "body": {
+        "ok": false, "error": {"code": "unknown_lane"}}}
+    }
+  ]
+}
