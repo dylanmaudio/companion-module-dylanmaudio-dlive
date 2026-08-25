@@ -11,3 +11,4 @@ pkg/
 .pnp.*
 .DS_Store
 dylanmaudio-dlive-*.tgz
+local/

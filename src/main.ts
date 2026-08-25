@@ -253,18 +253,24 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 
 	async reloadShowFile(): Promise<void> {
 		const names = new Map<number, string>()
+		const showActions: ActionMapEntry[] = []
 		if (this.config.showFile) {
 			try {
 				const r = readShowFile(this.config.showFile)
 				for (const w of r.warnings) this.log('info', `Show file: ${w}`)
 				for (const [n, name] of r.sceneNames) names.set(n, name)
+				for (const a of r.actions)
+					showActions.push({ cc: a.cc, value: a.value, name: a.name ?? `Action (CC ${a.cc} = ${a.value})` })
 				if (r.baseChannel !== undefined && r.baseChannel !== this.config.baseChannel) {
 					this.log(
 						'warn',
 						`Show file says the console's base MIDI channel is ${r.baseChannel}, but the connection is set to ${this.config.baseChannel}`,
 					)
 				}
-				this.log('info', `Show file: ${r.sceneNames.size} scene names loaded from ${r.source}`)
+				this.log(
+					'info',
+					`Show file: ${r.sceneNames.size} scene names and ${r.actions.length} Action triggers loaded from ${r.source}`,
+				)
 			} catch (e) {
 				this.log('error', `Show file: ${(e as Error).message}`)
 			}
@@ -273,6 +279,13 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 		for (const e of manual.errors) this.log('warn', `Scene names: ${e}`)
 		for (const [n, name] of manual.names) names.set(n, name)
 		this.link.state.sceneNames = names
+		// Actions: manual map entries win over show-file triggers on the same cc/value
+		const map = parseActionsMap(this.config.actionsMap)
+		const seen = new Set(map.entries.map((e) => `${e.cc}/${e.value}`))
+		const merged = [...map.entries, ...showActions.filter((a) => !seen.has(`${a.cc}/${a.value}`))]
+		const changed = JSON.stringify(merged) !== JSON.stringify(this.actionsMap)
+		this.actionsMap = merged
+		if (changed) this.setActionDefinitions(buildActions(this))
 		this.queueVariables({ scene_current_name: this.link.state.sceneName(this.link.state.currentScene) })
 	}
 }

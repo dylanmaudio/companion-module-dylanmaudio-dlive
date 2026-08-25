@@ -30,8 +30,8 @@ a DAW bridge, another module) may already hold the socket.
 | Sync on connect | What to read from the desk when the link comes up. "Names, colours, mutes & faders" takes a few seconds on a full desk |
 | Inputs in use / extended types | Bounds the variable grid, presets and the sync |
 | Scene Go / Next / Previous | The CC number + value you assigned on the console. 0/0 = not assigned |
-| Console Actions map | `cc,value,Name` per line — turns raw CC sends into a named dropdown |
-| Show file | Path to a dLive show (`.tar.gz` from the console's USB export, or an unpacked Show folder) on the Companion computer — the only source of **scene names**. Verified against real console exports from firmware 1.9x–2.x |
+| Console Actions map | `cc,value,Name` per line. Optional when a firmware 2.1x show file is loaded (Actions import automatically); manual lines override show-file entries on the same CC/value |
+| Show file | Path to a dLive show (`.tar.gz` from the console's USB export, or an unpacked Show folder). Loads **scene names** (the MIDI protocol cannot ask for them) and, from firmware ~2.1x shows, the **named Actions MIDI table** — every Action with a MIDI Recall trigger appears in the "Recall Action" dropdown and the preset library by its console name. Verified against real console exports (firmware 1.9x–2.1x). Note: Companion sandboxes modules, so the file must currently live inside the module's own folder — an in-browser upload is planned |
 | Scene names (manual) | `scene,Name` per line; overrides the show file |
 | Show send levels in dB | Off by default: the send-level ↔ dB mapping is not yet calibrated |
 | Preamp gain range | Sources disagree; pick what matches your screen |

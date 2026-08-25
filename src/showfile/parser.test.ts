@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseShowTar, readShowFile, sceneNameFromDat } from './parser.js'
@@ -28,6 +29,52 @@ describe('show file parser', () => {
 		const r = parseShowTar(Buffer.from('hello'))
 		expect(r.warnings[0]).toMatch(/Not a tar/)
 	})
+	it('reads the Actions MIDI table from a firmware 2.1x-style show directory', () => {
+		// synthetic Show/ dir in MIDISettings format 4 (LF endings, as fw 2.1x writes)
+		const dir = mkdtempSync(join(tmpdir(), 'dlive-show-'))
+		const show = join(dir, 'Show')
+		mkdirSync(join(show, 'MIDI'), { recursive: true })
+		mkdirSync(join(show, 'Multifunctions'), { recursive: true })
+		mkdirSync(join(show, 'Scenes'), { recursive: true })
+		writeFileSync(
+			join(show, 'MIDI', 'MIDISettings.dat'),
+			[
+				'4',
+				'0',
+				'255',
+				'255',
+				'255',
+				'255',
+				'255',
+				'255',
+				'255',
+				'255',
+				'true',
+				'true',
+				'20,2,1783869361347',
+				'21,5,1783869442272',
+				'20,1,999',
+				'255,255,0',
+				'255,255,0',
+				'',
+			].join('\n'),
+		)
+		writeFileSync(join(show, 'Multifunctions', 'Band changeover.dat'), '2\n19f56e64cc3\naa,1,\n')
+		writeFileSync(join(show, 'Multifunctions', 'House lights.dat'), '2\n19f56e788e0\naa,2,\n')
+		const r = readShowFile(dir)
+		expect(r.baseChannel).toBe(1)
+		expect(r.actions).toEqual([
+			{ cc: 20, value: 1, name: undefined }, // trigger whose Action file is gone
+			{ cc: 20, value: 2, name: 'Band changeover' }, // 0x19f56e64cc3 = 1783869361347
+			{ cc: 21, value: 5, name: 'House lights' }, // 0x19f56e788e0 = 1783869442272
+		])
+	})
+
+	it('older shows (format 3, no Actions table) yield an empty actions list', () => {
+		const r = parseShowTar(readFileSync(FOH), 'FoH')
+		expect(r.actions).toEqual([])
+	})
+
 	it('scene name is NUL-terminated after a 2-byte header', () => {
 		expect(sceneNameFromDat(Buffer.from([1, 1, 0x49, 0x6e, 0x74, 0x72, 0x6f, 0, 0, 0]))).toBe('Intro')
 		expect(sceneNameFromDat(Buffer.from([1, 1, 0]))).toBeUndefined()
