@@ -451,8 +451,8 @@ export function buildActions(ctx: ModuleContext): CompanionActionDefinitions<Act
 				},
 				{
 					type: 'dropdown',
-					id: 'type',
-					label: 'Type',
+					id: 'filter_type',
+					label: 'Filter type',
 					default: 0,
 					choices: [
 						{ id: 0, label: 'Bell' },
@@ -480,7 +480,7 @@ export function buildActions(ctx: ModuleContext): CompanionActionDefinitions<Act
 						value = eqWidthToValue(num(o, 'width', 1))
 						break
 					default:
-						value = Math.round(num(o, 'type'))
+						value = Math.round(num(o, 'filter_type'))
 				}
 				link.send({ op: 'peq', ...ref, band, param, value })
 			}),
