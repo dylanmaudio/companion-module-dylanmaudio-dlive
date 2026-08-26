@@ -54,3 +54,25 @@ marked `two-impl` / `single` / `inferred` in `docs/protocol.md` await the
 September 2026 hardware captures. Bridge mode (MIDI Bridge as the single
 console socket) is the transport interface's second implementation —
 not in v0.1.
+
+## Credits and prior art
+
+The dLive wire protocol is published by Allen & Heath (*MIDI Over TCP/IP
+Protocol V2.0*), and two MIT-licensed Companion modules got there first.
+This module is an independent implementation — different architecture,
+built around a state mirror the others do not have — but several
+byte-level value maps were derived from their work and are gratefully
+credited:
+
+- **`companion-module-allenheath-dlive`** (Tim Steer, MIT) — the EQ width
+  ↔ value table, the EQ and HPF frequency curves, the PEQ per-band
+  parameter numbers, the preamp socket offsets and gain mapping, and the
+  DCA / mute-group assign value encoding.
+- **`companion-module-allenheath-dlive-ilive`** (Andrew Broughton, Shaun
+  Davids and contributors, MIT) — corroboration of the send-level and
+  mix-assign SysEx shapes, and the alternative preamp gain range that the
+  "Preamp gain range" setting exists to reconcile.
+
+Both are MIT; their notices travel with the derived values, and
+`docs/protocol.md` records which claims rest on one implementation, two,
+or verified hardware.

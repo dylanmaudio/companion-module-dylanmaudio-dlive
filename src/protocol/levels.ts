@@ -13,6 +13,12 @@
  *
  * Send levels are a different SysEx surface and are NOT known to follow
  * this table; the module shows raw values for sends until calibrated.
+ *
+ * The EQ width table, the EQ/HPF frequency curves and the preamp gain
+ * mapping below are derived from the MIT-licensed
+ * companion-module-allenheath-dlive (Tim Steer) and
+ * companion-module-allenheath-dlive-ilive (Andrew Broughton et al.);
+ * see the Credits section in README.md.
  */
 
 export const FADER_CAL_FIRMWARE = '1.94'
