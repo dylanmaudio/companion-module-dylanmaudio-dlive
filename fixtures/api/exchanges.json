@@ -48,6 +48,25 @@
       "sends": ["bb 63 00 bb 62 17 bb 06 6b"]
     },
     {
+      "id": "cmd.action.pool_cc",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "<lane>", "cid": "fx7",
+                           "intent": {"op": "action", "cc": 20,
+                                       "value": 127}}},
+      "response": {"status": 200, "body": {"cid": "fx7", "ok": true}},
+      "sends": ["bb 14 7f"]
+    },
+    {
+      "id": "cmd.action.out_of_pool_cc_allowed",
+      "request": {"method": "POST", "path": "/api/v1/cmd",
+                  "body": {"lane_id": "<lane>", "cid": "fx8",
+                           "intent": {"op": "action", "cc": 80,
+                                       "value": 0}}},
+      "response": {"status": 200, "body": {"cid": "fx8", "ok": true}},
+      "sends": ["bb 50 00"],
+      "note": "A&H's safe pool is advisory — Pilot Tone Trigger ships CC 80, outside it. The API must not reject what an operator has legitimately bound; the monitor annotates instead."
+    },
+    {
       "id": "cmd.raw",
       "request": {"method": "POST", "path": "/api/v1/cmd",
                   "body": {"lane_id": "<lane>", "cid": "fx3",
