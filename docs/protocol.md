@@ -26,18 +26,25 @@ Firmware is undetectable over this protocol (the SysEx header carries
 | MixRack | 51325 | 51327 | Scene recall, all parameter control, Actions, Gets |
 | Surface | 51328 | 51329 | Cue-list recall, Scene Go / Next / Previous |
 
-TLS port numbers are `single` (the PDF); one earlier note in the dLive
-Utility Apps repo says 51326 — capture on the day (checklist item 11).
+TLS port numbers are `single` (the PDF, p.1). An earlier note in the
+dLive Utility Apps repo said 51326; that was wrong and is corrected —
+51326 is not a dLive control port.
 
 Both sockets are plain MIDI byte streams: no framing, no length prefix.
 TCP splits packets arbitrarily — the decoder is a byte-at-a-time state
-machine. A single host may hold one control connection per port
-(`hardware`, observed against A&H MIDI Control on the same Mac; whether a
-*second host* may also connect is open — checklist item 1).
+machine. Each endpoint accepts up to 40 simultaneous TCP connections
+(A&H documentation), and multiple clients on multiple hosts have been
+run against one console in the field — Companion and A&H's own dLive
+MIDI control app at the same time. The earlier "one connection per
+port per host" note was an artefact of two clients on one Mac fighting
+over the same local resource, not a console limit. Nothing in this
+module needs to arbitrate for the socket.
 
-TLS requires sending `UserProfile, UserPassword` then waiting for the six
-bytes `AuthOK` before any MIDI (`single`; the exact encoding/terminator
-of the credential pair is not specified and must be captured).
+TLS requires sending `UserProfile, UserPassword` then waiting for the
+six bytes `AuthOK` before any MIDI, or the console drops the
+connection (`single`). **`UserProfile` is a byte `0x00`–`0x1F` — a
+profile index, not a name string**; only the password is text. The
+separator and any terminator are unspecified and must be captured.
 
 ## 2. Addressing
 
@@ -79,9 +86,33 @@ keeps the NRPN triple atomic across any interleaving.
 9n CH 7F      mute on
 9n CH 3F      mute off
 ```
-Single Note On, no Note Off (an intermediate layer once mangled a
-paired Note Off into `00 00 00 00`). The PDF's values are `40`/`00`;
-the console accepts anything ≥ 0x40 as on. Decode by threshold.
+We send a single Note On with no Note Off (an intermediate layer once
+mangled a paired Note Off into `00 00 00 00`); the console is happy
+with the lone message.
+
+The console's OWN mute messages are a pair — `9N CH 7F, [9N] CH 00`
+for on and `9N CH 3F, [9N] CH 00` for off (PDF p.2). Receive rules,
+quoted exactly:
+
+| Velocity | Meaning |
+|---|---|
+| `00`, and any Note Off | **ignored** |
+| `01`–`3F` | mute OFF |
+| `40`–`7F` | mute ON |
+
+**Decode by threshold, but ignore velocity 0 first.** `9n CH 00` is
+the note-off half of the console's pair written in running-status
+idiom, not a mute-off value — the OFF range starts at `01`. Reading it
+as a mute-off makes every mute-on from the surface arrive as
+on-then-immediately-off, silently corrupting mirrored state. This doc
+and both codecs previously had it wrong (the `rx.mute.*.spec.*`
+fixtures asserted `9n CH 00` = mute off and were tagged `hardware`
+though they were authored from this PDF section, not captured).
+Whether the console actually emits the terminator is a capture item.
+
+A corollary, for anything talking to older tooling: the Reaper pack's
+Python used `40`/`00`. `40` is the lowest ON velocity, and `00` is
+ignored — so that path could mute a channel but never un-mute it.
 
 ### 3.2 Fader level — `hardware`
 ```
@@ -93,6 +124,19 @@ address**: the triple must never be interleaved with another lane's
 NRPN bytes on the same socket. Level ↔ dB is a measured table
 (`levels.ts`, firmware 1.94, `0x6B` = 0 dB, ~0.5 dB/step); never a
 formula.
+
+The PDF does publish a law — `LV = [(dB + 54) / 64] × 0x7F`, linear in
+dB from −54 to +10 across 0–127 with LV 0 = −inf and a 0.504 dB step —
+and the firmware-1.94 measurements agree with it to within 0.10 dB at
+every one of their 52 finite points, with no outliers. The rule stands
+anyway: the console *display* is what is being matched, and a firmware
+is free to move the taper. Use the law to CHECK a calibration, not to
+compute a level.
+
+What is genuinely unreliable is the PDF's printed anchor table, not its
+formula: those rows are rounded to whole dB and rounded inconsistently
+— the `+5 dB` row even self-contradicts, listing hex `74` against
+decimal `117` (`0x74` is 116; the formula gives 117).
 
 ### 3.3 NRPN parameters on a channel — `two-impl`
 Same triple shape, different parameter LSB:
@@ -116,14 +160,27 @@ bell/hf_shelf/low_pass; bands 1–2 bell only.
 ```
 Bn 00 bank   Bn 20 00   Cn pc        bank = (scene−1) div 128, pc = (scene−1) mod 128
 ```
-Scenes 1–500 across banks 0–3. Bank in CC0 (MSB); CC32 is sent as 0 to
-match the proven Reaper stream byte-for-byte. (Console Control brief
-§6.8.3 had the bank in CC32 — wrong.)
+Scenes 1–500 across banks 0–3. Bank in CC0 (MSB) — confirmed by the
+PDF, which writes all four banks as `BN 00 <bank>, CN SS` and never
+mentions CC32 at all. (Console Control brief §6.8.3 had the bank in
+CC32 — wrong.) CC32 is nonetheless sent as 0 so the stream stays
+byte-identical to the Reaper traffic proven over years of shows; the
+PDF's silence means it is presumed harmless rather than known to be,
+which is a 30-second console check.
+
+The console **transmits this same message** when a scene is recalled
+from its own screen, which is what makes scene state mirrorable
+without polling.
 
 ### 3.5 Cue-list recall — `single` (Surface socket)
 ```
 Bn 00 bank   Cn pc        id 0–1999, bank = min(15, id div 128), pc = id mod 128
 ```
+2000 user-assignable Recall Ids across 16 banks (the last bank stops at
+pc `0x4F`). The console **transmits this message** when a cue is
+recalled from the console, so the Surface socket carries cue state the
+MixRack socket does not. The MIDI message for a given cue can be read
+off the console in Scene Manager → Surface MIDI.
 
 ### 3.6 Go / Next / Previous — `hardware` (Surface socket)
 A single CC on the base channel; number and value are whatever the
@@ -140,14 +197,20 @@ Actions table is user-entered.
 Bn cc val
 ```
 
-### 3.8 Send level — `two-impl`, **dB mapping uncalibrated**
+### 3.8 Send level — `two-impl` + PDF, **dB mapping uncalibrated**
 ```
 F0 00 00 1A 50 10 01 00  0N 0D CH  0M DST LV  F7
 ```
 `0N`/`CH` source (N includes the type offset), `0M`/`DST` destination
 (aux / fx send / matrix / ufx send, with *its* type offset). `LV` is
-0–127. Whether `LV` follows the fader table is unknown until the
-September session; until then the module shows raw values for sends.
+0–127.
+
+The message shape is confirmed by the PDF (p.3), Get included. What is
+*not* confirmed is the value law: the PDF describes the send's LV with
+the same words as the fader's ("-inf to +10dB = 00 to 7F"), which
+hints they share a taper without saying so, and no one has measured it.
+Sends therefore stay raw-valued until the September sweep — encoding a
+send is safe, choosing a byte for a dB value is not.
 
 ### 3.9 Input → mix assign (group / aux / matrix) — `two-impl`
 ```
@@ -156,10 +219,16 @@ F0 <hdr> 0N 0E CH  0M DST  40|00  F7
 
 ### 3.10 Preamp (by socket) — `two-impl`
 ```
-En SOCK GAIN                          gain; range disputed (+5…+60 per PDF formula, −10…+50 per legacy module) — checklist item 9
+En SOCK GAIN                          gain, +5…+60 dB;  GV = [(dB − 5) / 55] × 0x7F
 F0 <hdr> 0N 09 SOCK 40|00 F7          pad
 F0 <hdr> 0N 0C SOCK 40|00 F7          48 V
 ```
+Gain range is **+5…+60 dB**, settled: the PDF gives both the formula
+and a worked table over that range. The −10…+50 dB figure some tooling
+carries is iLive's, not dLive's. The PDF's table rounds inconsistently
+(sometimes up, sometimes truncated), so treat the bounds as exact and
+the byte mapping as approximate until measured.
+
 All on the base channel `N` (no type offset). Gain rides a *pitch bend*
 status byte: the socket is the first data byte (MIDI's LSB position)
 and the gain the second (MSB). A generic MIDI library that combines
@@ -189,10 +258,23 @@ F0 <hdr> 0N 05 0B 17 CH F7             fader       (0B = CC/NRPN)      reply: Bn
 F0 <hdr> 0N 05 0B <param> CH F7        any NRPN parameter of §3.3     reply: NRPN triple
 F0 <hdr> 0N 05 0F 0D CH 0M DST F7      send level  (0F = SysEx)        reply: §3.8 message
 F0 <hdr> 0N 05 0F 0E CH 0M DST F7      mix assign                      reply: §3.9 message
-F0 <hdr> 0N 05 0E SOCK F7              preamp gain (0E = pitch bend)   reply: En SOCK GAIN
-F0 <hdr> 0N 05 0F 09 SOCK F7           pad                             reply: §3.10 message
-F0 <hdr> 0N 05 0F 0C SOCK F7           48 V                            reply: §3.10 message
+F0 <hdr> 0N 05 0B 19 SOCK F7           preamp gain                     reply: En SOCK GAIN
+F0 <hdr> 0N 07 SOCK F7                 pad                             reply: 0N 08 SOCK 00|7F
+F0 <hdr> 0N 0A SOCK F7                 48 V                            reply: 0N 0B SOCK 00|7F
 ```
+
+**The three preamp Gets break the generic pattern** — corrected here
+after reading the PDF directly (p.4), having previously been
+*inferred* from the pattern and therefore wrong in both codecs. Pad and
+48 V have dedicated Get ops (`07`, `0A`) *and* dedicated reply ops
+(`08`, `0B`) rather than echoing their set ops (`09`, `0C`); the
+decoder accepts both, since an echo is what a console might plausibly
+send instead. Gain uses the NRPN-style Get with parameter `19`.
+
+One unresolved oddity: the PDF writes the gain Get's last operand as
+`CH`, not `MP`, even though every other preamp message is addressed by
+socket. That is very likely a copy-paste slip, but it is the PDF, so
+both candidates go on the capture list rather than being guessed.
 Mute and fader Gets are `single` (PDF + legacy module); the rest follow
 the same pattern and are `inferred`. Reply shapes are assumed to be the
 matching *set* messages — the legacy module parses fader and send-level
@@ -204,6 +286,10 @@ Get that the console ignores degrades to "no feedback" rather than
 a connection fault.
 
 ## 4. Messages from the console (unsolicited) — `hardware`
+
+(Scene recall §3.4 and cue-list recall §3.5 also arrive unsolicited
+whenever an operator recalls from the console itself — the two states
+that can be mirrored with no polling at all.)
 
 | Event on the surface | Arrives | Carries state |
 |---|---|---|
@@ -218,6 +304,39 @@ trailing edge, issue one fader Get per burst plus one settle Get, cap
 in-flight Gets. Whether sends / assigns / preamp changes also ping is
 open (checklist item 3). Whether our own sets are echoed back is open
 (item 8) — the state layer must be idempotent either way.
+
+## 4b. MIDI Strips — `single`, unexploited
+
+A dLive fader strip can be configured as one of 32 **MIDI Strips**,
+which transmit custom MIDI rather than controlling audio. They are
+named, coloured, stored in scenes and can be made scene-safe. The
+factory template (Scene 9 of the Template Show) assigns:
+
+| Control | Message |
+|---|---|
+| Fader | `B1 00 v` … `B1 1F v` |
+| Rotary gain | `B2 00 v` … `B2 1F v` |
+| Rotary pan | `B2 20 v` … `B2 3F v` |
+| Rotary custom 1 / 3 | `B2 40 v` … `B2 5F v` |
+| Rotary custom 2 / 4 | `B2 60 v` … `B2 7F v` |
+| Mute key | `91 00 v` … `91 1F v` |
+| Mix key | `91 20 v` … `91 3F v` |
+| PAFL key | `91 40 v` … `91 5F v` |
+
+This is a whole surface-as-control-source path the module does not use
+yet: it turns physical strips into arbitrary triggers, which is exactly
+what a Companion user wants.
+
+**It also settles a recurring question: the Sel key cannot be mapped.**
+The PDF excludes it explicitly, because Sel is what selects the
+Processing screen used to configure the strip. Nothing anywhere in this
+protocol carries channel selection in either direction. Chasing
+"follow the console's selected channel" over MIDI is a dead end; if it
+is reachable at all it is in A&H's own Director/IP8 protocol.
+
+Note the fixed MIDI channels: strips talk on channels 2 and 3 (`B1`,
+`B2`, `91` are 0-indexed channels 1 and 2), which may collide with a
+base channel range of N..N+4. Worth a capture before building on it.
 
 ## 5. Decoder rules
 

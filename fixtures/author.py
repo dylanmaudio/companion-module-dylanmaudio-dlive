@@ -196,9 +196,13 @@ T("get_param.main_assign.input1", "inferred", {"op": "get_param", "type": "input
 T("get_param.hpf_on.input1", "inferred", {"op": "get_param", "type": "input", "index": 1, "param": 0x31}, sysex(n, [0x05, 0x0B, 0x31, 0x00]))
 T("get_send_level.input1.monoaux1", "single", {"op": "get_send_level", "type": "input", "index": 1, "dest_type": "mono_aux", "dest_index": 1}, sysex(n, [0x05, 0x0F, 0x0D, 0x00, n + 2, 0x00]))
 T("get_mix_assign.input1.monogroup1", "inferred", {"op": "get_mix_assign", "index": 1, "dest_type": "mono_group", "dest_index": 1}, sysex(n, [0x05, 0x0F, 0x0E, 0x00, n + 1, 0x00]))
-T("get_preamp_gain.mixrack1", "inferred", {"op": "get_preamp_gain", "bank": "mixrack", "socket": 1}, sysex(n, [0x05, 0x0E, 0x00]))
-T("get_preamp_pad.mixrack1", "inferred", {"op": "get_preamp_pad", "bank": "mixrack", "socket": 1}, sysex(n, [0x05, 0x0F, 0x09, 0x00]))
-T("get_preamp_48v.dx12.socket1", "inferred", {"op": "get_preamp_48v", "bank": "dx12", "socket": 1}, sysex(n, [0x05, 0x0F, 0x0C, 0x40]))
+# Preamp Gets do NOT follow the generic `05 <type> …` pattern the rest
+# of the Gets do — the PDF documents dedicated ops for pad and 48 V, and
+# an NRPN-style Get for gain. Was `inferred` from the pattern; now
+# `single` from the PDF (p.4).
+T("get_preamp_gain.mixrack1", "single", {"op": "get_preamp_gain", "bank": "mixrack", "socket": 1}, sysex(n, [0x05, 0x0B, 0x19, 0x00]), note="PDF writes CH here, not MP — suspected doc slip, capture both")
+T("get_preamp_pad.mixrack1", "single", {"op": "get_preamp_pad", "bank": "mixrack", "socket": 1}, sysex(n, [0x07, 0x00]), note="dedicated Get op 07, reply op 08")
+T("get_preamp_48v.dx12.socket1", "single", {"op": "get_preamp_48v", "bank": "dx12", "socket": 1}, sysex(n, [0x0A, 0x40]), note="dedicated Get op 0A, reply op 0B")
 
 # ---------------------------------------------------------------- RX cases
 for base in (1, 12):
@@ -206,8 +210,15 @@ for base in (1, 12):
     b = f"b{base}"
     R(f"rx.mute.input1.on.echo.{b}", "hardware", [0x90 | n, 0x00, 0x7F], [{"kind": "mute", "type": "input", "index": 1, "on": True}], base=base)
     R(f"rx.mute.input1.off.echo.{b}", "hardware", [0x90 | n, 0x00, 0x3F], [{"kind": "mute", "type": "input", "index": 1, "on": False}], base=base)
-    R(f"rx.mute.input1.on.spec.{b}", "hardware", [0x90 | n, 0x00, 0x40], [{"kind": "mute", "type": "input", "index": 1, "on": True}], base=base, note="PDF convention 0x40/0x00 — threshold decode")
-    R(f"rx.mute.input1.off.spec.{b}", "hardware", [0x90 | n, 0x00, 0x00], [{"kind": "mute", "type": "input", "index": 1, "on": False}], base=base)
+    R(f"rx.mute.input1.on.spec.{b}", "single", [0x90 | n, 0x00, 0x40], [{"kind": "mute", "type": "input", "index": 1, "on": True}], base=base, note="0x40 is the lowest ON velocity (spec: 40-7F = on) — threshold decode")
+    R(f"rx.mute.input1.lowest_off.{b}", "single", [0x90 | n, 0x00, 0x01], [{"kind": "mute", "type": "input", "index": 1, "on": False}], base=base, note="0x01 is the lowest OFF velocity (spec: 01-3F = off)")
+    # Velocity 0 is NOT a mute-off. It is the note-off half of the
+    # console's own pair ("9N CH 7F, [9N] CH 00", spec p.2), and the
+    # spec's receive table is explicit: "Velocity 00 and NOTE OFF
+    # messages are ignored", with the OFF range starting at 01.
+    # Decoding it as mute-off makes every console mute-on arrive as
+    # on-then-immediately-off. Capture the real pair on 2026-09-04.
+    R(f"rx.mute.velocity0.ignored.{b}", "single", [0x90 | n, 0x00, 0x7F, 0x90 | n, 0x00, 0x00], [{"kind": "mute", "type": "input", "index": 1, "on": True}], base=base, note="the console's documented mute pair: the 00 terminator must not emit a second event")
     R(f"rx.mute.dca3.{b}", "hardware", [0x90 | (n + 4), 0x38, 0x7F], [{"kind": "mute", "type": "dca", "index": 3, "on": True}], base=base)
     R(f"rx.ping.input1.{b}", "hardware", [0xB0 | n, 0x63, 0x00], [{"kind": "fader_ping", "type": "input", "index": 1}], base=base, note="lone NRPN MSB — fader moved, no level")
     R(f"rx.ping.stereogroup2.{b}", "hardware", [0xB0 | (n + 1), 0x63, 0x41], [{"kind": "fader_ping", "type": "stereo_group", "index": 2}], base=base)
@@ -263,18 +274,23 @@ R("rx.mix_assign.reply", "inferred", mix_assign(0, 1, "mono_group", 1, True),
   [{"kind": "mix_assign", "index": 1, "dest_type": "mono_group", "dest_index": 1, "on": True}])
 R("rx.preamp_gain.reply", "inferred", [0xE0, 0x00, 0x40],
   [{"kind": "preamp_gain", "bank": "mixrack", "socket": 1, "value": 64}])
-R("rx.preamp_pad.reply", "inferred", sysex(0, [0x09, 0x41, 0x40]),
-  [{"kind": "preamp_pad", "bank": "dx12", "socket": 2, "on": True}])
-R("rx.preamp_48v.reply", "inferred", sysex(0, [0x0C, 0x60, 0x00]),
-  [{"kind": "preamp_48v", "bank": "dx34", "socket": 1, "on": False}])
+R("rx.preamp_pad.reply", "single", sysex(0, [0x08, 0x41, 0x7F]),
+  [{"kind": "preamp_pad", "bank": "dx12", "socket": 2, "on": True}],
+  note="documented reply op 08; the PDF gives replies the saturated 00/7F values, not the 00-3F/40-7F set ranges")
+R("rx.preamp_pad.echo_of_set", "inferred", sysex(0, [0x09, 0x41, 0x40]),
+  [{"kind": "preamp_pad", "bank": "dx12", "socket": 2, "on": True}],
+  note="if the console echoes the set shape instead of the documented reply, it must still decode")
+R("rx.preamp_48v.reply", "single", sysex(0, [0x0B, 0x60, 0x00]),
+  [{"kind": "preamp_48v", "bank": "dx34", "socket": 1, "on": False}],
+  note="documented reply op 0B")
 R("rx.unknown_channel.passthrough", "hardware", [0x90 | 9, 0x00, 0x7F, 0x90, 0x00, 0x7F],
   [{"kind": "unknown", "status": 0x99, "data": [0, 127]}, {"kind": "mute", "type": "input", "index": 1, "on": True}],
   note="MIDI channel 10 is outside N..N+4 for base 1 → reported as unknown, stream continues")
 R("rx.note_off.ignored", "hardware", [0x80, 0x00, 0x00, 0x90, 0x00, 0x7F],
   [{"kind": "mute", "type": "input", "index": 1, "on": True}])
-R("rx.burst.running_status_with_clock", "hardware", [0x90] + sum(([0x24 + (i % 24), 0x40 if i % 2 == 0 else 0x00] + ([0xF8] if i == 3 else []) for i in range(8)), []),
+R("rx.burst.running_status_with_clock", "single", [0x90] + sum(([0x24 + (i % 24), 0x7F if i % 2 == 0 else 0x3F] + ([0xF8] if i == 3 else []) for i in range(8)), []),
   [{"kind": "mute", "type": "input", "index": 0x24 + (i % 24) + 1, "on": i % 2 == 0} for i in range(8)],
-  note="the Virtual dLive's running_status_burst shape (8 notes, clock spliced after the 4th)")
+  note="the Virtual dLive's running_status_burst shape (8 notes, clock spliced after the 4th). Velocities are 7F/3F: 00 would be a note-off terminator, not a mute-off.")
 
 out = {"schema": "dlive-fixtures/1", "source": "docs/protocol.md",
        "note": "Authority for both codecs. Tiers: hardware > two-impl > single > inferred (see docs/protocol.md)."}

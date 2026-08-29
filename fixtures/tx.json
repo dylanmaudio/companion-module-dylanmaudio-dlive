@@ -1196,7 +1196,7 @@
   },
   {
    "id": "get_preamp_gain.mixrack1",
-   "tier": "inferred",
+   "tier": "single",
    "dir": "tx",
    "socket": "mixrack",
    "base_channel": 1,
@@ -1205,11 +1205,12 @@
     "bank": "mixrack",
     "socket": 1
    },
-   "hex": "f0 00 00 1a 50 10 01 00 00 05 0e 00 f7"
+   "hex": "f0 00 00 1a 50 10 01 00 00 05 0b 19 00 f7",
+   "note": "PDF writes CH here, not MP \u2014 suspected doc slip, capture both"
   },
   {
    "id": "get_preamp_pad.mixrack1",
-   "tier": "inferred",
+   "tier": "single",
    "dir": "tx",
    "socket": "mixrack",
    "base_channel": 1,
@@ -1218,11 +1219,12 @@
     "bank": "mixrack",
     "socket": 1
    },
-   "hex": "f0 00 00 1a 50 10 01 00 00 05 0f 09 00 f7"
+   "hex": "f0 00 00 1a 50 10 01 00 00 07 00 f7",
+   "note": "dedicated Get op 07, reply op 08"
   },
   {
    "id": "get_preamp_48v.dx12.socket1",
-   "tier": "inferred",
+   "tier": "single",
    "dir": "tx",
    "socket": "mixrack",
    "base_channel": 1,
@@ -1231,7 +1233,8 @@
     "bank": "dx12",
     "socket": 1
    },
-   "hex": "f0 00 00 1a 50 10 01 00 00 05 0f 0c 40 f7"
+   "hex": "f0 00 00 1a 50 10 01 00 00 0a 40 f7",
+   "note": "dedicated Get op 0A, reply op 0B"
   }
  ]
 }

@@ -18,6 +18,8 @@ import {
 	OP_MIX_ASSIGN,
 	OP_PREAMP_48V,
 	OP_PREAMP_PAD,
+	OP_REPLY_PREAMP_48V,
+	OP_REPLY_PREAMP_PAD,
 	OP_REPLY_COLOUR,
 	OP_REPLY_NAME,
 	OP_SEND_LEVEL,
@@ -180,6 +182,14 @@ export class DliveDecoder {
 			return
 		}
 		if (hi === 0x80) return // note off: ignored, transparent to a pending ping
+		// A Note On with velocity 0 is the same message in MIDI's
+		// running-status idiom, and it is how the console writes the
+		// terminator of its own mute pair ("9N CH 7F, [9N] CH 00",
+		// spec p.2). The spec's receive table is explicit — "Velocity
+		// 00 and NOTE OFF messages are ignored", OFF starting at 0x01 —
+		// so reading it as a mute-off would make every mute-on from the
+		// surface arrive as on-then-immediately-off.
+		if (hi === 0x90 && m.data[1] === 0) return
 		this.flushPing(out)
 		switch (hi) {
 			case 0x90: {
@@ -297,12 +307,20 @@ export class DliveDecoder {
 				out.push({ kind: 'mix_assign', index: src.index, dest_type: dst.type, dest_index: dst.index, on: p[5] >= 0x40 })
 				return
 			}
+			// The spec gives pad and 48 V dedicated REPLY ops (08 / 0B)
+			// distinct from their set ops (09 / 0C). Accept both: the
+			// reply op is what the PDF documents, the set op is what a
+			// pure echo would look like, and which one the console
+			// actually emits is a capture item.
+			case OP_REPLY_PREAMP_PAD:
+			case OP_REPLY_PREAMP_48V:
 			case OP_PREAMP_PAD:
 			case OP_PREAMP_48V: {
 				if (p.length < 4) return
 				const sock = resolveSocket(p[2])
 				if (!sock) return
-				out.push({ kind: op === OP_PREAMP_PAD ? 'preamp_pad' : 'preamp_48v', ...sock, on: p[3] >= 0x40 })
+				const isPad = op === OP_PREAMP_PAD || op === OP_REPLY_PREAMP_PAD
+				out.push({ kind: isPad ? 'preamp_pad' : 'preamp_48v', ...sock, on: p[3] >= 0x40 })
 				return
 			}
 			default:

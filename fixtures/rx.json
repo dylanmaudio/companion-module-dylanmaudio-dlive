@@ -37,7 +37,7 @@
   },
   {
    "id": "rx.mute.input1.on.spec.b1",
-   "tier": "hardware",
+   "tier": "single",
    "dir": "rx",
    "socket": "mixrack",
    "base_channel": 1,
@@ -50,15 +50,15 @@
      "on": true
     }
    ],
-   "note": "PDF convention 0x40/0x00 \u2014 threshold decode"
+   "note": "0x40 is the lowest ON velocity (spec: 40-7F = on) \u2014 threshold decode"
   },
   {
-   "id": "rx.mute.input1.off.spec.b1",
-   "tier": "hardware",
+   "id": "rx.mute.input1.lowest_off.b1",
+   "tier": "single",
    "dir": "rx",
    "socket": "mixrack",
    "base_channel": 1,
-   "hex": "90 00 00",
+   "hex": "90 00 01",
    "events": [
     {
      "kind": "mute",
@@ -66,7 +66,25 @@
      "index": 1,
      "on": false
     }
-   ]
+   ],
+   "note": "0x01 is the lowest OFF velocity (spec: 01-3F = off)"
+  },
+  {
+   "id": "rx.mute.velocity0.ignored.b1",
+   "tier": "single",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "90 00 7f 90 00 00",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "the console's documented mute pair: the 00 terminator must not emit a second event"
   },
   {
    "id": "rx.mute.dca3.b1",
@@ -228,7 +246,7 @@
   },
   {
    "id": "rx.mute.input1.on.spec.b12",
-   "tier": "hardware",
+   "tier": "single",
    "dir": "rx",
    "socket": "mixrack",
    "base_channel": 12,
@@ -241,15 +259,15 @@
      "on": true
     }
    ],
-   "note": "PDF convention 0x40/0x00 \u2014 threshold decode"
+   "note": "0x40 is the lowest ON velocity (spec: 40-7F = on) \u2014 threshold decode"
   },
   {
-   "id": "rx.mute.input1.off.spec.b12",
-   "tier": "hardware",
+   "id": "rx.mute.input1.lowest_off.b12",
+   "tier": "single",
    "dir": "rx",
    "socket": "mixrack",
    "base_channel": 12,
-   "hex": "9b 00 00",
+   "hex": "9b 00 01",
    "events": [
     {
      "kind": "mute",
@@ -257,7 +275,25 @@
      "index": 1,
      "on": false
     }
-   ]
+   ],
+   "note": "0x01 is the lowest OFF velocity (spec: 01-3F = off)"
+  },
+  {
+   "id": "rx.mute.velocity0.ignored.b12",
+   "tier": "single",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 12,
+   "hex": "9b 00 7f 9b 00 00",
+   "events": [
+    {
+     "kind": "mute",
+     "type": "input",
+     "index": 1,
+     "on": true
+    }
+   ],
+   "note": "the console's documented mute pair: the 00 terminator must not emit a second event"
   },
   {
    "id": "rx.mute.dca3.b12",
@@ -719,6 +755,23 @@
   },
   {
    "id": "rx.preamp_pad.reply",
+   "tier": "single",
+   "dir": "rx",
+   "socket": "mixrack",
+   "base_channel": 1,
+   "hex": "f0 00 00 1a 50 10 01 00 00 08 41 7f f7",
+   "events": [
+    {
+     "kind": "preamp_pad",
+     "bank": "dx12",
+     "socket": 2,
+     "on": true
+    }
+   ],
+   "note": "documented reply op 08; the PDF gives replies the saturated 00/7F values, not the 00-3F/40-7F set ranges"
+  },
+  {
+   "id": "rx.preamp_pad.echo_of_set",
    "tier": "inferred",
    "dir": "rx",
    "socket": "mixrack",
@@ -731,15 +784,16 @@
      "socket": 2,
      "on": true
     }
-   ]
+   ],
+   "note": "if the console echoes the set shape instead of the documented reply, it must still decode"
   },
   {
    "id": "rx.preamp_48v.reply",
-   "tier": "inferred",
+   "tier": "single",
    "dir": "rx",
    "socket": "mixrack",
    "base_channel": 1,
-   "hex": "f0 00 00 1a 50 10 01 00 00 0c 60 00 f7",
+   "hex": "f0 00 00 1a 50 10 01 00 00 0b 60 00 f7",
    "events": [
     {
      "kind": "preamp_48v",
@@ -747,7 +801,8 @@
      "socket": 1,
      "on": false
     }
-   ]
+   ],
+   "note": "documented reply op 0B"
   },
   {
    "id": "rx.unknown_channel.passthrough",
@@ -792,11 +847,11 @@
   },
   {
    "id": "rx.burst.running_status_with_clock",
-   "tier": "hardware",
+   "tier": "single",
    "dir": "rx",
    "socket": "mixrack",
    "base_channel": 1,
-   "hex": "90 24 40 25 00 26 40 27 00 f8 28 40 29 00 2a 40 2b 00",
+   "hex": "90 24 7f 25 3f 26 7f 27 3f f8 28 7f 29 3f 2a 7f 2b 3f",
    "events": [
     {
      "kind": "mute",
@@ -847,7 +902,7 @@
      "on": false
     }
    ],
-   "note": "the Virtual dLive's running_status_burst shape (8 notes, clock spliced after the 4th)"
+   "note": "the Virtual dLive's running_status_burst shape (8 notes, clock spliced after the 4th). Velocities are 7F/3F: 00 would be a note-off terminator, not a mute-off."
   }
  ]
 }

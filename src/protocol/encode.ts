@@ -18,6 +18,7 @@ import {
 import {
 	PARAM_ASSIGN,
 	PARAM_FADER,
+	PARAM_PREAMP_GAIN,
 	PARAM_HPF_FREQ,
 	PARAM_HPF_ON,
 	PARAM_MAIN_ASSIGN,
@@ -37,7 +38,11 @@ export const OP_SET_NAME = 0x03
 export const OP_GET_COLOUR = 0x04
 export const OP_REPLY_COLOUR = 0x05
 export const OP_SET_COLOUR = 0x06
+export const OP_GET_PREAMP_PAD = 0x07
+export const OP_REPLY_PREAMP_PAD = 0x08
 export const OP_PREAMP_PAD = 0x09
+export const OP_GET_PREAMP_48V = 0x0a
+export const OP_REPLY_PREAMP_48V = 0x0b
 export const OP_PREAMP_48V = 0x0c
 export const OP_SEND_LEVEL = 0x0d
 export const OP_MIX_ASSIGN = 0x0e
@@ -207,11 +212,17 @@ export function encode(baseN: number, intent: Intent): number[] {
 			return sysex(src.n, [OP_GET, GET_TYPE_SYSEX, OP_MIX_ASSIGN, src.addr, dst.n, dst.addr])
 		}
 		case 'get_preamp_gain':
-			return sysex(baseN, [OP_GET, GET_TYPE_PITCHBEND, sock(intent)])
+			// Spec p.4 writes this as `0N 05 0B 19 CH` — the NRPN-style
+			// Get with parameter 0x19, and with CH where every other
+			// preamp message carries the socket MP. That is probably a
+			// copy-paste slip in the PDF, but the PDF still outranks the
+			// `05 0E MP` shape we had inferred. Capture both on the
+			// console before trusting either (checklist §8).
+			return sysex(baseN, [OP_GET, GET_TYPE_CC, PARAM_PREAMP_GAIN, sock(intent)])
 		case 'get_preamp_pad':
-			return sysex(baseN, [OP_GET, GET_TYPE_SYSEX, OP_PREAMP_PAD, sock(intent)])
+			return sysex(baseN, [OP_GET_PREAMP_PAD, sock(intent)])
 		case 'get_preamp_48v':
-			return sysex(baseN, [OP_GET, GET_TYPE_SYSEX, OP_PREAMP_48V, sock(intent)])
+			return sysex(baseN, [OP_GET_PREAMP_48V, sock(intent)])
 		default: {
 			const never: never = intent
 			throw new Error(`unhandled intent ${JSON.stringify(never)}`)

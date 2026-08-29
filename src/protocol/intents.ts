@@ -120,6 +120,7 @@ export type ConsoleEventKind = ConsoleEvent['kind']
 // NRPN parameter numbers (docs/protocol.md §3.2–3.3)
 export const PARAM_FADER = 0x17
 export const PARAM_MAIN_ASSIGN = 0x18
+export const PARAM_PREAMP_GAIN = 0x19 // Get only — the set is a pitch bend
 export const PARAM_ASSIGN = 0x40 // DCA + mute group, split by value range
 export const PARAM_HPF_FREQ = 0x30
 export const PARAM_HPF_ON = 0x31
