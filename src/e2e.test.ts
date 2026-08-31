@@ -183,6 +183,8 @@ describe.skipIf(!HAVE_SIM)('end-to-end against the Virtual dLive', () => {
 		inst = new DliveInstance(host.context)
 		await inst.init({
 			...DEFAULT_CONFIG,
+			// direct mode is not user-selectable; it exists for this harness
+			transport: 'direct',
 			host: '127.0.0.1',
 			port: sim.port,
 			baseChannel: 1,
@@ -286,6 +288,7 @@ describe.skipIf(!HAVE_SIM)('end-to-end against the Virtual dLive', () => {
 		quiet.proc.kill() // close the listener: connect will fail → stays 'connecting', never 'ok'
 		await i2.init({
 			...DEFAULT_CONFIG,
+			transport: 'direct',
 			host: '127.0.0.1',
 			port: quiet.port,
 			baseChannel: 1,

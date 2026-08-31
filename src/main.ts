@@ -176,8 +176,11 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 		this.setActionDefinitions(buildActions(this))
 		this.setFeedbackDefinitions(buildFeedbacks(this))
 		void this.reloadShowFile().then(() => this.publishDefinitions())
-		if (this.config.transport === 'direct' && !this.config.host) {
-			this.updateStatus(InstanceStatus.BadConfig, 'Enter the MixRack IP address (or switch to bridge mode)')
+		if (this.config.transport === 'bridge' && !this.config.bridgeHost) {
+			this.updateStatus(
+				InstanceStatus.BadConfig,
+				'Enter the MIDI Bridge address (127.0.0.1 if it runs on this machine)',
+			)
 			return
 		}
 		if (first || this.link.status === 'disconnected') this.link.start()
@@ -194,9 +197,14 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 
 	private meta(): MetaValues {
 		const d = this.link.diag()
+		// In bridge mode the bridge owns the base channel and reports it in /info.
+		const baseChannel =
+			this.link instanceof BridgeLink
+				? (this.link.bridgeBaseChannel ?? this.config.baseChannel)
+				: this.config.baseChannel
 		return {
 			firmware: this.config.firmware,
-			baseChannel: this.config.baseChannel,
+			baseChannel,
 			getsInFlight: d.getsInFlight,
 			getsMissed: d.getsMissed,
 			unsupported: d.unsupported,

@@ -1,8 +1,14 @@
-import { Regex, type SomeCompanionConfigField } from '@companion-module/base'
+import type { SomeCompanionConfigField } from '@companion-module/base'
 import type { PreampGainRange } from './protocol/levels.js'
 import type { SyncScope } from './link.js'
 
 export type ModuleConfig = {
+	/**
+	 * NOT surfaced in the connection UI — this module is bridge-only.
+	 * Direct mode survives solely as the protocol test harness: it is what
+	 * `src/e2e.test.ts` drives against the Virtual dLive, and what the
+	 * hardware capture work uses. Users have no way to select it.
+	 */
 	transport: 'direct' | 'bridge'
 	bridgeHost: string
 	bridgePort: number
@@ -34,7 +40,7 @@ export type ModuleConfig = {
 }
 
 export const DEFAULT_CONFIG: ModuleConfig = {
-	transport: 'direct',
+	transport: 'bridge',
 	bridgeHost: '127.0.0.1',
 	bridgePort: 8765,
 	bridgeToken: '',
@@ -66,7 +72,7 @@ export const DEFAULT_CONFIG: ModuleConfig = {
 
 export function normaliseConfig(raw: Partial<ModuleConfig> | null | undefined): ModuleConfig {
 	const c = { ...DEFAULT_CONFIG, ...(raw ?? {}) }
-	if (c.transport !== 'bridge') c.transport = 'direct'
+	if (c.transport !== 'direct') c.transport = 'bridge'
 	if (!c.bridgeHost) c.bridgeHost = '127.0.0.1'
 	c.bridgePort = clampInt(c.bridgePort, 1, 65535, 8765)
 	c.port = clampInt(c.port, 1, 65535, 51325)
@@ -95,31 +101,15 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			type: 'static-text',
 			id: 'info',
 			width: 12,
-			label: 'Allen & Heath dLive',
+			label: 'dLive MIDI Bridge',
 			value:
-				'Talks MIDI over TCP to the <b>MixRack</b> (port 51325). On the console set Utility → Control → MIDI to <b>On</b> (not Secure), enable Global MIDI Send and Receive, and note the base MIDI channel shown there — it must match below. Status goes green only once the desk actually answers.',
+				'This module talks to the <b>dLive MIDI Bridge</b> application, which owns the connection to the console. Set the console address, base MIDI channel and reconnect behaviour <b>in the bridge</b> — this module inherits them. Status goes green only once the bridge reports its console link is up.',
 		},
-		{
-			type: 'dropdown',
-			id: 'transport',
-			label: 'Connect via',
-			tooltip:
-				'Direct: this module opens its own console sockets. MIDI Bridge: the module attaches to the dLive MIDI Bridge app (Client API), sharing its console connection, state mirror and MIDI Monitor.',
-			width: 12,
-			default: 'direct',
-			choices: [
-				{ id: 'direct', label: 'Direct console (TCP)' },
-				{ id: 'bridge', label: 'MIDI Bridge app (Client API v1, bridge 1.1+)' },
-			],
-		},
-		{ type: 'textinput', id: 'host', label: 'MixRack IP (direct)', width: 8, regex: Regex.IP, default: '' },
-		{ type: 'number', id: 'port', label: 'Port (direct)', width: 4, min: 1, max: 65535, default: 51325 },
 		{
 			type: 'textinput',
 			id: 'bridgeHost',
-			label: 'MIDI Bridge address (bridge mode)',
-			tooltip:
-				'127.0.0.1 when Companion runs on the same Mac as the bridge. The console IP and base channel then come from the bridge.',
+			label: 'MIDI Bridge address',
+			tooltip: '127.0.0.1 when Companion runs on the same machine as the bridge.',
 			width: 8,
 			default: '127.0.0.1',
 		},
@@ -127,7 +117,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'textinput',
 			id: 'bridgeToken',
-			label: 'Bridge token (only for LAN access)',
+			label: 'Bridge token (LAN access only)',
 			tooltip:
 				'Leave empty on the same machine. When the bridge exposes its API on the LAN it shows a token — paste it here.',
 			width: 12,
@@ -135,52 +125,18 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		},
 		{
 			type: 'textinput',
-			id: 'surfaceHost',
-			label: 'Surface IP (optional)',
-			tooltip:
-				'Cue-list recall and Scene Go / Next / Previous belong to the Surface (port 51328). Leave blank to send them down the MixRack socket instead.',
-			width: 8,
-			default: '',
-		},
-		{ type: 'number', id: 'surfacePort', label: 'Surface port', width: 4, min: 1, max: 65535, default: 51328 },
-		{
-			type: 'number',
-			id: 'baseChannel',
-			label: 'Base MIDI channel (1–12)',
-			tooltip:
-				'Utility → Control → MIDI on the console. Every channel type is an offset from this; a wrong value moves the wrong strip.',
-			width: 4,
-			min: 1,
-			max: 12,
-			default: 12,
-		},
-		{
-			type: 'textinput',
 			id: 'firmware',
 			label: 'Console firmware',
 			tooltip: 'Not detectable over MIDI. Recorded in the $(dlive:firmware) variable and used in the support log.',
-			width: 4,
+			width: 6,
 			default: '',
-		},
-		{
-			type: 'dropdown',
-			id: 'syncScope',
-			label: 'Sync on connect',
-			width: 4,
-			default: 'names_state',
-			choices: [
-				{ id: 'names', label: 'Names & colours' },
-				{ id: 'names_state', label: 'Names, colours, mutes & faders' },
-				{ id: 'all', label: 'Everything (slow on a full desk)' },
-				{ id: 'none', label: 'Nothing — learn as it happens' },
-			],
 		},
 		{
 			type: 'number',
 			id: 'inputs',
 			label: 'Inputs in use',
-			tooltip: 'Bounds the variable grid, presets and the connect-time sync. 128 is the full desk.',
-			width: 4,
+			tooltip: 'Bounds the variable grid and the preset library. 128 is the full desk.',
+			width: 6,
 			min: 1,
 			max: 128,
 			default: 128,
@@ -190,7 +146,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			id: 'extendedTypes',
 			label: 'Groups, auxes, matrices, FX & UFX too',
 			tooltip: 'Declare variables and presets for every channel type, not only inputs, mains, DCAs and mute groups.',
-			width: 8,
+			width: 12,
 			default: true,
 		},
 		{
@@ -212,7 +168,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			id: 'actionsMap',
 			label: 'Console Actions map',
 			tooltip:
-				'One per line: <control number>,<value>,<name>. Example: 20,1,Band 2 changeover. The console cannot tell us its Actions, so this list is what makes the "Recall Action" dropdown read like your show.',
+				'One per line: <control number>,<value>,<name>. Optional when a firmware 2.1x show file is loaded — Actions import from it automatically. Manual lines win on the same CC/value.',
 			width: 12,
 			multiline: true,
 			default: '',
@@ -222,7 +178,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			id: 'showFile',
 			label: 'Show file (path on the Companion computer)',
 			tooltip:
-				'A dLive show file (.tar.gz / .dlive) or an unpacked Show folder. Scene names and channel names are read from it — the only way to get scene names, since the MIDI protocol cannot ask for them. Re-read with the "Reload show file" action.',
+				'A dLive show (.tar.gz from the console USB export, or an unpacked Show folder). Loads scene names — the only source, since the protocol cannot ask for them — and the named Actions table from firmware ~2.1x shows.',
 			width: 12,
 			default: '',
 		},
@@ -230,7 +186,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			type: 'textinput',
 			id: 'sceneNames',
 			label: 'Scene names (manual)',
-			tooltip: 'One per line: <scene number>,<name>. Overrides names from the show file.',
+			tooltip: 'One per line: <scene number>,<name>. Overrides the show file.',
 			width: 12,
 			multiline: true,
 			default: '',
@@ -240,7 +196,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			id: 'sendsInDb',
 			label: 'Show send levels in dB',
 			tooltip:
-				'Send levels are a separate protocol surface whose dB mapping is not yet calibrated. Off: sends show raw 0–127. On: assume the fader table (may be off by a few dB).',
+				'Send levels are a separate protocol surface whose dB mapping is not yet calibrated. Off: raw 0–127. On: assume the fader table (may be off by a few dB).',
 			width: 6,
 			default: false,
 		},
@@ -255,33 +211,6 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 				{ id: 'spec', label: '+5 … +60 dB (V2.0 spec)' },
 				{ id: 'legacy', label: '−10 … +50 dB (legacy module)' },
 			],
-		},
-		{
-			type: 'static-text',
-			id: 'infoAdv',
-			width: 12,
-			label: 'Advanced',
-			value:
-				'Flow control is undocumented on the dLive. Defaults are conservative; lower them if the desk drops replies under load.',
-		},
-		{ type: 'number', id: 'inFlight', label: 'Gets in flight', width: 4, min: 1, max: 32, default: 8 },
-		{
-			type: 'number',
-			id: 'pingCoalesceMs',
-			label: 'Fader ping coalesce (ms)',
-			width: 4,
-			min: 0,
-			max: 500,
-			default: 40,
-		},
-		{
-			type: 'number',
-			id: 'pollIntervalMs',
-			label: 'Background poll interval (ms)',
-			width: 4,
-			min: 10,
-			max: 2000,
-			default: 50,
 		},
 		{ type: 'checkbox', id: 'debugEvents', label: 'Log every decoded event (debug)', width: 12, default: false },
 	]

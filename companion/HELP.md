@@ -1,63 +1,59 @@
-# Allen & Heath dLive (dylanmaudio)
+# dLive MIDI Bridge (dylanmaudio)
 
-Control a dLive **and see what it is doing**: mutes, fader levels, names,
-colours and the current scene come back from the desk and drive
-feedbacks, variables and self-labelling presets.
+Control an Allen & Heath dLive **and see what it is doing**: mutes,
+fader levels, names, colours and the current scene come back from the
+desk and drive feedbacks, variables and self-labelling presets.
 
-## Console setup
+## What this module is
 
-On the Surface: **Utility → Control → MIDI**
+This module controls an Allen & Heath dLive **through the dLive MIDI
+Bridge application**. The bridge owns the connection to the console;
+this module attaches to it as a named lane, alongside anything else you
+have connected — a DAW, Console Control, other apps — all sharing one
+console connection and one MIDI monitor that attributes every message
+to the app that sent it.
 
-- MIDI mode: **On** (not Off, not Secure — TLS is not supported yet)
-- **Global MIDI Send** and **Global MIDI Receive**: enabled
-- Note the **base MIDI channel** shown there (1–12). It must match the
-  connection setting. Every channel type is an offset from it, so a wrong
-  value moves the wrong strip.
+**It does not connect to a console directly.** You need the MIDI Bridge
+app (v1.1 or later) running and connected to your desk. Console address,
+base MIDI channel and reconnect behaviour are configured **in the
+bridge**, and this module inherits them.
 
-Network: the module talks to the **MixRack** on port 51325. Only one
-control connection per port is allowed from a host — if Companion sits at
-"Connecting" with the desk reachable, something else (A&H MIDI Control,
-a DAW bridge, another module) may already hold the socket.
+## Setup
+
+1. In the MIDI Bridge app, connect to your console and confirm it is
+   online.
+2. On the console: **Utility → Control → MIDI**, mode **On** (not
+   Secure), Global MIDI Send and Receive enabled.
+3. In this connection, set the bridge address — `127.0.0.1` when
+   Companion runs on the same machine as the bridge. The token is only
+   needed if the bridge is exposing its API over the LAN.
 
 ## Connection settings
 
-**Connect via** chooses the transport:
-
-- **Direct console (TCP)** — the module opens its own sockets to the desk.
-- **MIDI Bridge app (Client API v1)** — the module attaches to the dLive
-  MIDI Bridge (v1.1+) as a named lane. The bridge owns the console
-  connection, base channel, state mirror, query-on-ping and timed fades;
-  Companion's traffic shows up attributed in the bridge's MIDI Monitor.
-  Console IP and base channel are then configured in the bridge, not here.
-  In bridge mode v1.1, live feedback covers mutes, faders, names, colours
-  and the current scene; the param family (assigns, HPF, preamp, sends)
-  updates optimistically from this module's own actions only.
-
 | Setting | Notes |
 |---|---|
-| MixRack IP / port | Direct mode. Usually 192.168.1.70 : 51325 |
-| MIDI Bridge address / port / token | Bridge mode. 127.0.0.1:8765 when Companion runs beside the bridge; the token is only needed once the bridge exposes its API on the LAN |
-| Surface IP / port | Optional. Cue-list recall and Scene Go / Next / Previous belong to the Surface (51328). Leave blank to send them down the MixRack socket |
-| Base MIDI channel | From Utility → Control → MIDI |
+| MIDI Bridge address / port / token | Where the bridge is. 127.0.0.1 : 8765 when it runs beside Companion |
 | Console firmware | Not detectable over MIDI; shown in `$(dlive:firmware)` |
-| Sync on connect | What to read from the desk when the link comes up. "Names, colours, mutes & faders" takes a few seconds on a full desk |
-| Inputs in use / extended types | Bounds the variable grid, presets and the sync |
+| Inputs in use / extended types | Bounds the variable grid and the preset library |
 | Scene Go / Next / Previous | The CC number + value you assigned on the console. 0/0 = not assigned |
-| Console Actions map | `cc,value,Name` per line. Optional when a firmware 2.1x show file is loaded (Actions import automatically); manual lines override show-file entries on the same CC/value |
-| Show file | Path to a dLive show (`.tar.gz` from the console's USB export, or an unpacked Show folder). Loads **scene names** (the MIDI protocol cannot ask for them) and, from firmware ~2.1x shows, the **named Actions MIDI table** — every Action with a MIDI Recall trigger appears in the "Recall Action" dropdown and the preset library by its console name. Verified against real console exports (firmware 1.9x–2.1x). Note: Companion sandboxes modules, so the file must currently live inside the module's own folder — an in-browser upload is planned |
+| Console Actions map | `cc,value,Name` per line. Optional when a firmware 2.1x show file is loaded — Actions import automatically; manual lines win on the same CC/value |
+| Show file | A dLive show (`.tar.gz` USB export or unpacked Show folder). Loads **scene names** — the only source, since the protocol cannot ask for them — and the **named Actions table** from firmware ~2.1x shows |
 | Scene names (manual) | `scene,Name` per line; overrides the show file |
 | Show send levels in dB | Off by default: the send-level ↔ dB mapping is not yet calibrated |
 | Preamp gain range | Sources disagree; pick what matches your screen |
 
 ### Status colours
 
-Green means **the desk answered**, not merely that TCP connected. The
-module sends *Get Name* for Input 1 and waits for that reply; it repeats
-the probe every 15 s. If the console stops answering you get:
+Green means **the bridge is reachable *and* reports its console link is
+up** — not merely that the bridge answered. If the bridge is running but
+the desk is not connected you get:
 
-> Connected, but the console is not responding. Check Utility → Control →
-> MIDI on the console: mode must be On (not Off or Secure) and Global
-> MIDI Receive must be enabled.
+> MIDI Bridge is running but its console link is down — check the bridge app
+
+and if the bridge itself is not reachable, the status stays amber with
+the address it is waiting on. Fix console-side problems (MIDI mode Off
+or Secure, Global MIDI Receive disabled, wrong address) in the bridge,
+not here.
 
 ## How feedback works
 
@@ -67,9 +63,11 @@ the probe every 15 s. If the console stops answering you get:
   asks for the level once the movement settles (one query per gesture).
 - **Names and colours** are read on connect and whenever a strip is
   renamed on the surface.
-- **Sends, assigns, preamps, HPF**: not announced by the desk. These are
-  polled in the background — only the ones a feedback on a button is
-  actually watching, one request at a time.
+- **Sends, assigns, preamps, HPF**: not announced by the desk, and the
+  bridge's state mirror does not yet carry them. Feedbacks for these
+  reflect changes *this module* makes, and will not follow changes made
+  on the surface or by another controller. They are listed in
+  `$(dlive:unsupported_gets)` so the limitation is visible.
 - Anything the module sets itself is mirrored immediately, so buttons
   update even if the desk does not echo.
 
@@ -129,9 +127,11 @@ GO / Next / Previous; named Console Actions; a status button.
 
 ## Troubleshooting
 
-- **Stays "Connecting"**: IP/port, or another controller holds the socket.
-- **Connected but "not responding"**: MIDI mode Off/Secure, Global MIDI
-  Receive off, or this is the Surface address with a MixRack port.
-- **Wrong strip moves**: base MIDI channel mismatch.
+- **Stays "Connecting"**: the bridge is not running, or the address/port
+  is wrong. Check the bridge app is open and note its API port.
+- **"console link is down"**: the bridge is fine, the desk is not — fix
+  it in the bridge (address, MIDI mode Off/Secure, Global MIDI Receive).
+- **Wrong strip moves**: base MIDI channel mismatch — set it in the
+  bridge; this module reads it from there.
 - Tick *Log every decoded event* in the settings and watch the Companion
   log to see exactly what the desk is sending.

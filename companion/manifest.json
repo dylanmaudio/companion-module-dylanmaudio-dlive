@@ -3,8 +3,8 @@
 	"type": "connection",
 	"id": "dylanmaudio-dlive",
 	"name": "dylanmaudio-dlive",
-	"shortname": "dLive",
-	"description": "Allen & Heath dLive — control with full state feedback, variables and presets. Mute, fader, scene and name feedback straight off the desk; timed fades on every level; show-file import for scene names.",
+	"shortname": "MIDI Bridge",
+	"description": "Control an Allen & Heath dLive through the dLive MIDI Bridge application \u2014 one shared console connection with full state feedback, variables and presets. Requires the MIDI Bridge app; it does not connect to a console directly.",
 	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/dylanmaudio/companion-module-dylanmaudio-dlive.git",
@@ -22,7 +22,17 @@
 		"entrypoint": "../dist/main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "Allen & Heath",
-	"products": ["dLive"],
-	"keywords": ["Audio", "Sound", "Mixer", "dLive", "Allen & Heath", "MIDI"]
+	"manufacturer": "dylanmaudio",
+	"products": [
+		"dLive MIDI Bridge"
+	],
+	"keywords": [
+		"Audio",
+		"Sound",
+		"Mixer",
+		"dLive",
+		"Allen & Heath",
+		"MIDI",
+		"Bridge"
+	]
 }
