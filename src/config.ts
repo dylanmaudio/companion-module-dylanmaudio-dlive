@@ -1,6 +1,7 @@
 import type { SomeCompanionConfigField } from '@companion-module/base'
 import type { PreampGainRange } from './protocol/levels.js'
 import type { SyncScope } from './link.js'
+import { describeImport, readImport } from './showfile/upload.js'
 
 export type ModuleConfig = {
 	/**
@@ -30,6 +31,12 @@ export type ModuleConfig = {
 	prevValue: number
 	actionsMap: string
 	showFile: string
+	/**
+	 * Scene names and Actions imported from an uploaded show, as JSON — see
+	 * `showfile/upload.ts`. Written by the module's own upload page, never
+	 * shown as an editable field.
+	 */
+	showImport: string
 	sceneNames: string
 	sendsInDb: boolean
 	preampGainRange: PreampGainRange
@@ -61,6 +68,7 @@ export const DEFAULT_CONFIG: ModuleConfig = {
 	prevValue: 0,
 	actionsMap: '',
 	showFile: '',
+	showImport: '',
 	sceneNames: '',
 	sendsInDb: false,
 	preampGainRange: 'spec',
@@ -85,6 +93,9 @@ export function normaliseConfig(raw: Partial<ModuleConfig> | null | undefined): 
 	for (const k of ['goCc', 'goValue', 'nextCc', 'nextValue', 'prevCc', 'prevValue'] as const)
 		c[k] = clampInt(c[k], 0, 127, 0)
 	if (c.preampGainRange !== 'spec' && c.preampGainRange !== 'legacy') c.preampGainRange = 'spec'
+	// An unreadable import is dropped rather than carried around: it would only
+	// fail again on every reload, and the upload page can always reload the show.
+	if (!readImport(c.showImport)) c.showImport = ''
 	if (!['names', 'names_state', 'all', 'none'].includes(c.syncScope)) c.syncScope = 'names_state'
 	return c
 }
@@ -95,7 +106,14 @@ function clampInt(v: unknown, min: number, max: number, dflt: number): number {
 	return Math.max(min, Math.min(max, Math.round(n)))
 }
 
-export function GetConfigFields(): SomeCompanionConfigField[] {
+export interface ConfigFieldContext {
+	/** Connection label — the module's HTTP endpoint is addressed by it */
+	label?: string
+	/** Current value of showImport, so the form can say what is loaded */
+	showImport?: string
+}
+
+export function GetConfigFields(ctx: ConfigFieldContext = {}): SomeCompanionConfigField[] {
 	return [
 		{
 			type: 'static-text',
@@ -174,11 +192,18 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			default: '',
 		},
 		{
+			type: 'static-text',
+			id: 'infoShow',
+			width: 12,
+			label: 'Show file',
+			value: showFileBlurb(ctx),
+		},
+		{
 			type: 'textinput',
 			id: 'showFile',
-			label: 'Show file (path on the Companion computer)',
+			label: 'Show file path (advanced)',
 			tooltip:
-				'A dLive show (.tar.gz from the console USB export, or an unpacked Show folder). Loads scene names — the only source, since the protocol cannot ask for them — and the named Actions table from firmware ~2.1x shows.',
+				'Usually leave this empty and use the show file page above. Companion runs this module sandboxed to its own folder, so a path elsewhere on the disk normally cannot be read. An uploaded show takes precedence over this.',
 			width: 12,
 			default: '',
 		},
@@ -214,6 +239,17 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		},
 		{ type: 'checkbox', id: 'debugEvents', label: 'Log every decoded event (debug)', width: 12, default: false },
 	]
+}
+
+/** The show-file paragraph: what is loaded, and a link to the page that loads it. */
+function showFileBlurb(ctx: ConfigFieldContext): string {
+	const link = ctx.label
+		? `<a href="/instance/${encodeURIComponent(ctx.label)}/" target="_blank" rel="noopener">show file page</a>`
+		: 'show file page'
+	const loaded = describeImport(readImport(ctx.showImport ?? ''))
+	return loaded
+		? `Loaded: <b>${loaded}</b>. Open the ${link} to replace or remove it.`
+		: `Scene names exist only in the show file — the protocol has no way to ask the console for them, and firmware 2.1x shows also carry the named Actions table. Open the ${link} to load one.`
 }
 
 export interface ActionMapEntry {

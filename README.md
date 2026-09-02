@@ -30,7 +30,10 @@ fixtures/api/           Client API exchange fixtures (authored bridge-side, vend
 src/transport/          test harness only: ConsoleTransport, TcpTransport, FakeTransport
 src/link.ts             test harness only: ConsoleLink — codec + state + scheduler + probe + fades
 src/fades.ts            dB-linear emit-on-change ramps
-src/showfile/           dLive show-file reader (scene names, quick names, base channel)
+src/showfile/parser.ts  dLive show-file reader (scene names, quick names, base channel, Actions)
+src/showfile/upload.ts  chunked upload reassembly + the derived import kept in the config
+src/showfile/uploadpage.ts  the page served at /instance/<label>/ — Companion has no file picker
+test/showbuilder.ts     builds synthetic dLive shows for the show-file tests
 src/{config,actions,feedbacks,variables,presets,main}.ts   the Companion layer
 src/e2e.test.ts         real module + fake Companion host + real TCP to the Virtual dLive
 ```

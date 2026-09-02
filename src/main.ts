@@ -1,6 +1,8 @@
 import {
 	InstanceBase,
 	InstanceStatus,
+	type CompanionHTTPRequest,
+	type CompanionHTTPResponse,
 	type CompanionRecordedAction,
 	type CompanionVariableValues,
 	type LogLevel,
@@ -32,7 +34,17 @@ import {
 	type VariableScope,
 	type VariablesSchema,
 } from './variables.js'
-import { readShowFile } from './showfile/parser.js'
+import { parseShowTar, readShowFile } from './showfile/parser.js'
+import {
+	describeImport,
+	extractChunk,
+	importedActions,
+	importedScenes,
+	readImport,
+	toImport,
+	UploadBuffer,
+} from './showfile/upload.js'
+import { uploadPageHtml } from './showfile/uploadpage.js'
 import { lvToDb } from './protocol/levels.js'
 import type { ConsoleEvent } from './protocol/intents.js'
 
@@ -64,6 +76,7 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 	private variableFlush: NodeJS.Timeout | null = null
 	private pendingFeedbackIds = new Set<string>()
 	private feedbackFlush: NodeJS.Timeout | null = null
+	private readonly uploads = new UploadBuffer()
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -117,7 +130,74 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 	}
 
 	getConfigFields(): SomeCompanionConfigField[] {
-		return GetConfigFields()
+		return GetConfigFields({ label: this.label, showImport: this.config.showImport })
+	}
+
+	// ------------------------------------------------------- show file page
+
+	/**
+	 * Companion has no file-picker config field, and this process is sandboxed
+	 * to its own folder, so a typed path is usually unreadable. Serving a page
+	 * of our own gets a real file dialog and the bytes with it.
+	 */
+	async handleHttpRequest(req: CompanionHTTPRequest): Promise<CompanionHTTPResponse> {
+		const path = (req.path ?? '/').replace(/\/+$/, '')
+		try {
+			if (req.method === 'POST' && path.endsWith('/upload')) return await this.httpUploadShow(req)
+			if (req.method === 'POST' && path.endsWith('/remove')) return await this.httpRemoveShow()
+			if (req.method !== 'GET') return httpJson(405, { error: `${req.method} not allowed here` })
+			return {
+				status: 200,
+				headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+				body: uploadPageHtml({
+					label: this.label,
+					imported: describeImport(readImport(this.config.showImport)),
+					path: this.config.showFile,
+				}),
+			}
+		} catch (e) {
+			const message = (e as Error).message
+			this.log('warn', `Show file page: ${message}`)
+			return httpJson(400, { error: message })
+		}
+	}
+
+	private async httpUploadShow(req: CompanionHTTPRequest): Promise<CompanionHTTPResponse> {
+		const q = req.query ?? {}
+		const name = (q.name || 'show').slice(0, 120)
+		const buf = this.uploads.add(q.id ?? '', name, Number(q.part), Number(q.total), extractChunk(req.body))
+		if (!buf) return httpJson(200, { done: false })
+		const r = parseShowTar(buf, name)
+		if (r.sceneNames.size === 0 && r.actions.length === 0)
+			return httpJson(400, {
+				error: r.warnings[0] ?? 'No scene names or Actions in that file — is it a dLive show?',
+			})
+		const imported = toImport(r, name, new Date())
+		await this.storeShowImport(JSON.stringify(imported))
+		this.log('info', `Show file: loaded "${name}" — ${r.sceneNames.size} scene names, ${r.actions.length} Actions`)
+		return httpJson(200, {
+			done: true,
+			name,
+			scenes: r.sceneNames.size,
+			actions: r.actions.length,
+			baseChannel: r.baseChannel ?? null,
+			warnings: r.warnings,
+			summary: describeImport(imported),
+		})
+	}
+
+	private async httpRemoveShow(): Promise<CompanionHTTPResponse> {
+		await this.storeShowImport('')
+		this.log('info', 'Show file: imported show removed')
+		return httpJson(200, { ok: true })
+	}
+
+	/** Persist the import in the connection config, then re-derive everything from it. */
+	private async storeShowImport(showImport: string): Promise<void> {
+		this.config = { ...this.config, showImport }
+		this.saveConfig(this.config)
+		await this.reloadShowFile()
+		this.publishDefinitions()
 	}
 
 	// ------------------------------------------------------------ wiring
@@ -286,22 +366,24 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 		this.checkAllFeedbacks()
 	}
 
+	/**
+	 * Rebuild scene names and the Actions table from every source, weakest
+	 * first: the show file path, then an uploaded show, then whatever the
+	 * operator typed into the connection form. Typing always wins — it is the
+	 * only way to correct a show that is wrong or out of date.
+	 */
 	async reloadShowFile(): Promise<void> {
 		const names = new Map<number, string>()
-		const showActions: ActionMapEntry[] = []
+		const fromShow = new Map<string, ActionMapEntry>()
+		let showBaseChannel: number | undefined
+
 		if (this.config.showFile) {
 			try {
 				const r = readShowFile(this.config.showFile)
 				for (const w of r.warnings) this.log('info', `Show file: ${w}`)
 				for (const [n, name] of r.sceneNames) names.set(n, name)
-				for (const a of r.actions)
-					showActions.push({ cc: a.cc, value: a.value, name: a.name ?? `Action (CC ${a.cc} = ${a.value})` })
-				if (r.baseChannel !== undefined && r.baseChannel !== this.config.baseChannel) {
-					this.log(
-						'warn',
-						`Show file says the console's base MIDI channel is ${r.baseChannel}, but the connection is set to ${this.config.baseChannel}`,
-					)
-				}
+				for (const a of r.actions) fromShow.set(`${a.cc}/${a.value}`, toActionEntry(a.cc, a.value, a.name))
+				showBaseChannel = r.baseChannel
 				this.log(
 					'info',
 					`Show file: ${r.sceneNames.size} scene names and ${r.actions.length} Action triggers loaded from ${r.source}`,
@@ -310,17 +392,46 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 				this.log('error', `Show file: ${(e as Error).message}`)
 			}
 		}
-		const manual = parseSceneNames(this.config.sceneNames)
-		for (const e of manual.errors) this.log('warn', `Scene names: ${e}`)
-		for (const [n, name] of manual.names) names.set(n, name)
+
+		const imported = readImport(this.config.showImport)
+		if (imported) {
+			const scenes = importedScenes(imported)
+			const actions = importedActions(imported)
+			for (const [n, name] of scenes) names.set(n, name)
+			for (const a of actions) fromShow.set(`${a.cc}/${a.value}`, toActionEntry(a.cc, a.value, a.name))
+			if (imported.baseChannel !== undefined) showBaseChannel = imported.baseChannel
+			this.log(
+				'info',
+				`Show file: ${scenes.size} scene names and ${actions.length} Action triggers from the uploaded show "${imported.name}"`,
+			)
+		}
+
+		if (showBaseChannel !== undefined && showBaseChannel !== this.config.baseChannel) {
+			this.log(
+				'warn',
+				`Show file says the console's base MIDI channel is ${showBaseChannel}, but the connection is set to ${this.config.baseChannel}`,
+			)
+		}
+
+		const manualNames = parseSceneNames(this.config.sceneNames)
+		for (const e of manualNames.errors) this.log('warn', `Scene names: ${e}`)
+		for (const [n, name] of manualNames.names) names.set(n, name)
 		this.link.state.sceneNames = names
-		// Actions: manual map entries win over show-file triggers on the same cc/value
-		const map = parseActionsMap(this.config.actionsMap)
-		const seen = new Set(map.entries.map((e) => `${e.cc}/${e.value}`))
-		const merged = [...map.entries, ...showActions.filter((a) => !seen.has(`${a.cc}/${a.value}`))]
+
+		const manual = parseActionsMap(this.config.actionsMap)
+		const seen = new Set(manual.entries.map((e) => `${e.cc}/${e.value}`))
+		const merged = [...manual.entries, ...[...fromShow.values()].filter((a) => !seen.has(`${a.cc}/${a.value}`))]
 		const changed = JSON.stringify(merged) !== JSON.stringify(this.actionsMap)
 		this.actionsMap = merged
 		if (changed) this.setActionDefinitions(buildActions(this))
 		this.queueVariables({ scene_current_name: this.link.state.sceneName(this.link.state.currentScene) })
 	}
+}
+
+function toActionEntry(cc: number, value: number, name: string | undefined): ActionMapEntry {
+	return { cc, value, name: name ?? `Action (CC ${cc} = ${value})` }
+}
+
+function httpJson(status: number, body: unknown): CompanionHTTPResponse {
+	return { status, headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(body) }
 }

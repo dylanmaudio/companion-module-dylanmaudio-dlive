@@ -37,7 +37,8 @@ bridge**, and this module inherits them.
 | Inputs in use / extended types | Bounds the variable grid and the preset library |
 | Scene Go / Next / Previous | The CC number + value you assigned on the console. 0/0 = not assigned |
 | Console Actions map | `cc,value,Name` per line. Optional when a firmware 2.1x show file is loaded — Actions import automatically; manual lines win on the same CC/value |
-| Show file | A dLive show (`.tar.gz` USB export or unpacked Show folder). Loads **scene names** — the only source, since the protocol cannot ask for them — and the **named Actions table** from firmware ~2.1x shows |
+| Show file | Loaded on the connection's own **show file page**, not here — see below |
+| Show file path (advanced) | Only useful when the file sits somewhere this sandboxed module can read. An uploaded show wins over it |
 | Scene names (manual) | `scene,Name` per line; overrides the show file |
 | Show send levels in dB | Off by default: the send-level ↔ dB mapping is not yet calibrated |
 | Preamp gain range | Sources disagree; pick what matches your screen |
@@ -54,6 +55,29 @@ and if the bridge itself is not reachable, the status stays amber with
 the address it is waiting on. Fix console-side problems (MIDI mode Off
 or Secure, Global MIDI Receive disabled, wrong address) in the bridge,
 not here.
+
+## Loading a show file
+
+Scene names exist only in the show file — there is no way to ask the console
+for them over MIDI — and firmware ~2.1x shows also carry the named Actions
+table. Both are loaded from the connection's own page:
+
+> `http://<your-companion>:8000/instance/<connection label>/`
+
+The link is on the connection settings page, next to **Show file**. Choose a
+dLive show — the `.tar.gz` the console writes to USB, or a Director export —
+and the page reports how many scene names and Actions came out of it.
+
+The file is read in the browser and only the **scene names** and the
+**Actions table** are kept, in this connection's settings. The show itself is
+not stored, and nothing leaves the computer. It survives restarts, so the
+show file does not have to stay on the Companion machine — which matters,
+since Companion runs modules sandboxed to their own folder and usually
+*cannot* read a path you type in.
+
+Anything typed into **Scene names (manual)** or **Console Actions map** still
+wins over the loaded show, so a wrong or out-of-date entry can be corrected
+without re-exporting anything.
 
 ## How feedback works
 
