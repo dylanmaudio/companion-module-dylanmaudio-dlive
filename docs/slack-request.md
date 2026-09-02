@@ -1,5 +1,9 @@
 # Bitfocus repo request — process + message
 
+> **SUPERSEDED, 27–29 Aug 2026.** Kept for the record; the reasoning
+> below is no longer the plan. What actually happened, and what replaced
+> it, is in "Outcome" at the foot of this file. Read that first.
+
 ## Process
 
 1. **Join the Bitfocus Slack**: invite link at <https://bitfocus.io/api/slackinvite>
@@ -74,3 +78,54 @@ than a promise. Say the word and I'll create and push it.
 - **No feature promises that depend on September** — sends calibration,
   preamp gain range etc. are internal concerns; the module ships useful
   without them.
+
+---
+
+## Outcome (29 Aug 2026)
+
+The request was made and met with immediate resistance — two reviewers
+asked, reasonably, "why not add state feedback to the existing modules
+instead?" Then a concrete acceptance spec was offered:
+
+> Remove the ability to connect to the console directly from the module
+> and change the manifest so that it's clearly targeted toward your
+> middleware instead and doesn't include a manufacturer that you're not.
+> But we'd much rather see you contribute toward a companion module that
+> can do all of this natively.
+
+**Tim Steer (`shedworth`), the incumbent maintainer, replied warmly** —
+he built `allenheath-dlive` over a winter on a borrowed console, has no
+desk at home to test against, would welcome feedback support, and would
+prefer it as an enhancement rather than a separate module. He pointed at
+**PR #8** (`BrentonStarkie`, +3942/−55), open since February.
+
+The decisive discovery: **that PR is blocked on hardware, not code.** Its
+tester deferred in July; Tim has no console. Running its real
+`FeedbackHandler` against the Virtual dLive found a genuine defect — the
+desk's lone `Bn 63 <ch>` fader ping stalls its fixed-length framer and
+swallows the following message — plus an open question (which NRPN
+framing the console replies with) that only a desk can settle.
+
+### The plan that replaced this document
+
+1. **Help land PR #8 as a contributor.** Hardware and a simulator are
+   what the ecosystem is short of, and they cost no roadmap control. The
+   findings and offer are drafted; posting waits until the September
+   captures can back them with real bytes.
+2. **Ship a module for the bridge, not for the console.** Manufacturer
+   `dylanmaudio`, product "dLive MIDI Bridge", no direct console path —
+   done in `a7e0b6e`. The bridge is console-agnostic by design, so the
+   same module covers other desks as drivers are added, rather than
+   becoming another per-console module.
+
+The intended id is **`dylanmaudio-midi-bridge`**; the manifest still
+says `dylanmaudio-dlive` pending a fresh request under the new name
+(which also means renaming this repo and the dev-module symlink).
+
+### What was actually right in the original reasoning
+
+- Discoverability follows the `manufacturer` field, not the id — which
+  is why retargeting the manifest mattered more than the id ever did.
+- The registry repo lives in the Bitfocus org, so a rename goes through
+  them; worth getting the name right before asking.
+- Self-distribution via `.tgz` remains a working fallback.
