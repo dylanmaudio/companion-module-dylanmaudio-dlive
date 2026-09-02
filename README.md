@@ -22,7 +22,6 @@ docs/protocol.md        the protocol as implemented, every byte, with a verifica
 fixtures/tx.json        golden byte fixtures — the AUTHORITY for the codec (module → console)
 fixtures/rx.json                                                        (console → module)
 fixtures/author.py      regenerates the two JSON files from the byte templates
-fixtures/showfiles/     a firmware-template show file for the show-file parser test
 src/protocol/           channels (addressing), intents, encode, decode, levels (measured dB table)
 src/state/              ConsoleState (the mirror), SubscriptionRegistry, QueryScheduler
 src/link-api.ts         LinkApi — the seam the Companion layer talks to
