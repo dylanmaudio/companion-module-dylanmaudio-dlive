@@ -93,9 +93,11 @@ export function normaliseConfig(raw: Partial<ModuleConfig> | null | undefined): 
 	for (const k of ['goCc', 'goValue', 'nextCc', 'nextValue', 'prevCc', 'prevValue'] as const)
 		c[k] = clampInt(c[k], 0, 127, 0)
 	if (c.preampGainRange !== 'spec' && c.preampGainRange !== 'legacy') c.preampGainRange = 'spec'
-	// An unreadable import is dropped rather than carried around: it would only
-	// fail again on every reload, and the upload page can always reload the show.
-	if (!readImport(c.showImport)) c.showImport = ''
+	// A stored import is NOT silently dropped when it will not parse. Losing scene
+	// names without a word is the worst outcome here — the operator finds out on
+	// a show day — so the value is kept and reloadShowFile() reports it instead.
+	// Only absurd sizes are refused: 500 scenes and a full Actions table is ~15 kB.
+	if (typeof c.showImport !== 'string' || c.showImport.length > 512 * 1024) c.showImport = ''
 	if (!['names', 'names_state', 'all', 'none'].includes(c.syncScope)) c.syncScope = 'names_state'
 	return c
 }
@@ -246,10 +248,12 @@ function showFileBlurb(ctx: ConfigFieldContext): string {
 	const link = ctx.label
 		? `<a href="/instance/${encodeURIComponent(ctx.label)}/" target="_blank" rel="noopener">show file page</a>`
 		: 'show file page'
-	const loaded = describeImport(readImport(ctx.showImport ?? ''))
-	return loaded
-		? `Loaded: <b>${loaded}</b>. Open the ${link} to replace or remove it.`
-		: `Scene names exist only in the show file — the protocol has no way to ask the console for them, and firmware 2.1x shows also carry the named Actions table. Open the ${link} to load one.`
+	const raw = ctx.showImport ?? ''
+	const loaded = describeImport(readImport(raw))
+	if (loaded) return `Loaded: <b>${loaded}</b>. Open the ${link} to replace or remove it.`
+	if (raw)
+		return `<b>The stored show could not be read</b>, so its scene names and Actions are missing. Open the ${link} and load the show again.`
+	return `Scene names exist only in the show file — the protocol has no way to ask the console for them, and firmware 2.1x shows also carry the named Actions table. Open the ${link} to load one.`
 }
 
 export interface ActionMapEntry {

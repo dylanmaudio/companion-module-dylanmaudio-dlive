@@ -394,6 +394,12 @@ export default class DliveInstance extends InstanceBase<ModuleSchema> implements
 		}
 
 		const imported = readImport(this.config.showImport)
+		if (this.config.showImport && !imported) {
+			this.log(
+				'error',
+				"Show file: the stored show import could not be read, so its scene names and Actions are missing — load the show again on the connection's show file page",
+			)
+		}
 		if (imported) {
 			const scenes = importedScenes(imported)
 			const actions = importedActions(imported)

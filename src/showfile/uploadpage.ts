@@ -31,6 +31,30 @@ export interface UploadPageModel {
 	path: string
 }
 
+/**
+ * The dylanmaudio mark, traced as vectors: a ringed disc holding an M built
+ * from the same rounded bars as a level meter. Drawn rather than embedded so
+ * it stays sharp at any size and the page keeps needing no external files.
+ * Each stroke is painted twice — a wide white pass, then a narrower dark one —
+ * which is what gives every bar its outline.
+ */
+const LOGO = `<svg viewBox="0 0 1024 1024" aria-hidden="true">
+	<circle cx="512" cy="512" r="455" fill="none" stroke="#0b0b0b" stroke-width="26"/>
+	<circle cx="512" cy="512" r="429" fill="#414141" stroke="#fff" stroke-width="13"/>
+	<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+		<g stroke="#fff" stroke-width="74">
+			<path d="M256 400V616M768 400V616M126 512h14M884 512h14"/>
+			<path d="M512 228V796"/>
+		</g>
+		<g stroke="#0b0b0b" stroke-width="52">
+			<path d="M256 400V616M768 400V616M126 512h14M884 512h14"/>
+			<path d="M512 228V796"/>
+		</g>
+		<path d="M382 690V338l130 130 130-130v352" stroke="#fff" stroke-width="82"/>
+		<path d="M382 690V338l130 130 130-130v352" stroke="#0b0b0b" stroke-width="60"/>
+	</g>
+</svg>`
+
 /** Two faders — the bridge's icon, redrawn as inline SVG. */
 const ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
 	<path d="M9 3v18M15 3v18"/><rect x="6" y="7" width="6" height="3.4" rx="1.2" fill="currentColor" stroke="none"/>
@@ -84,9 +108,8 @@ export function uploadPageHtml(m: UploadPageModel): string {
 	header h1 { margin:0; font-size:1.3rem; font-weight:700; letter-spacing:-.01em }
 	header p { margin:.15rem 0 0; font-size:.9rem; color:#ffffffc4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 	header .brand { flex:none; text-align:center; color:#fff }
-	header .brand .mark { width:2.6rem; height:2.6rem; margin:0 auto; border-radius:50%;
-	                      border:1.5px solid #ffffff99; display:grid; place-items:center;
-	                      font-size:.95rem; font-weight:700; letter-spacing:.02em }
+	header .brand .mark { width:2.7rem; height:2.7rem; margin:0 auto }
+	header .brand .mark svg { width:100%; height:100%; display:block }
 	header .brand span { display:block; margin-top:.4rem; font-size:.55rem; letter-spacing:.16em; color:#ffffffd0 }
 
 	main { padding:1.25rem }
@@ -135,7 +158,7 @@ export function uploadPageHtml(m: UploadPageModel): string {
 			<p>${escapeHtml(m.label)}</p>
 		</div>
 		<div class="brand">
-			<div class="mark">M</div>
+			<div class="mark">${LOGO}</div>
 			<span>DYLANMAUDIO</span>
 		</div>
 	</header>
